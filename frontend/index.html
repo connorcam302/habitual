@@ -646,6 +646,89 @@
       white-space: nowrap;
     }
 
+    /* ── Rest day ── */
+    .rest-day {
+      margin: 0 12px 8px;
+      padding: 10px 14px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    /* ── Week sidebar (desktop only) ── */
+    #week-layout { display: block; }
+    #week-sidebar { display: none; }
+
+    .sidebar-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .sidebar-section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .sidebar-type-row { margin-bottom: 12px; }
+    .sidebar-type-row:last-child { margin-bottom: 0; }
+    .sidebar-type-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+    .sidebar-type-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .sidebar-type-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      flex: 1;
+    }
+    .sidebar-type-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .sidebar-type-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .sidebar-type-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+    .sidebar-office-days { display: flex; gap: 6px; }
+    .sidebar-office-pip {
+      flex: 1;
+      padding: 8px 4px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      font-family: 'Space Grotesk', sans-serif;
+      text-align: center;
+    }
+    .sidebar-office-pip.office {
+      border-color: #3b82f650;
+      background: #3b82f610;
+      color: var(--text-muted);
+    }
+
     /* ── Desktop (≥ 768px) ── */
     @media (min-width: 768px) {
       body {
@@ -693,18 +776,23 @@
       .office-days-link { margin-left: 0; }
       .header-progress { padding: 0 24px 14px; }
 
-      /* Sessions: 2-column day grid */
-      #week-view {
+      /* Sessions list + sidebar */
+      #week-layout {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0 20px;
+        grid-template-columns: 1fr 260px;
+        gap: 0 24px;
         padding: 24px 24px 0;
         align-items: start;
       }
-      #week-view .empty-state { grid-column: 1 / -1; }
+      #week-sidebar {
+        display: block;
+        position: sticky;
+        top: 90px;
+      }
       .day-group { margin-bottom: 20px; }
       .day-header { padding: 0 0 0 4px; }
       .card { margin: 0 0 8px; }
+      .rest-day { margin: 0 0 8px; }
 
       /* History: 4-column stats, 2-column week list */
       .stats-grid {
@@ -793,8 +881,11 @@
 
   <!-- Main scrollable area -->
   <div id="main-content">
-    <!-- Week view -->
-    <div id="week-view"></div>
+    <!-- Week layout: session list + sidebar -->
+    <div id="week-layout">
+      <div id="week-view"></div>
+      <aside id="week-sidebar"></aside>
+    </div>
     <!-- History view -->
     <div id="history-view" style="display:none;"></div>
   </div>
@@ -1008,7 +1099,7 @@ function updateWeekLabel() {
 // ─── Tabs ────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   state.view = tab;
-  document.getElementById('week-view').style.display    = tab === 'week' ? '' : 'none';
+  document.getElementById('week-layout').style.display  = tab === 'week' ? '' : 'none';
   document.getElementById('history-view').style.display = tab === 'history' ? '' : 'none';
   // Bottom tab bar (mobile)
   document.getElementById('tab-week').classList.toggle('active', tab === 'week');
@@ -1033,14 +1124,10 @@ function updateProgress() {
 // ─── Week render ─────────────────────────────────────────────────────────────
 function renderWeek() {
   const container = document.getElementById('week-view');
-
-  if (state.sessions.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No sessions for this week.<br/>Navigate to the current week to get started.</div></div>';
-    return;
-  }
-
   const today = todayDayName();
+  const isCurrentWeek = state.currentWeek === currentMondayISO();
   const dayOrder = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+
   const grouped = {};
   for (const s of state.sessions) {
     if (!grouped[s.day]) grouped[s.day] = [];
@@ -1049,10 +1136,8 @@ function renderWeek() {
 
   let html = '';
   for (const day of dayOrder) {
-    const sessions = grouped[day];
-    if (!sessions || sessions.length === 0) continue;
-
-    const isToday = day === today && state.currentWeek === currentMondayISO();
+    const sessions = grouped[day] || [];
+    const isToday = isCurrentWeek && day === today;
     const dateStr = dateForDay(state.currentWeek, day);
 
     html += `<div class="day-group">
@@ -1062,13 +1147,18 @@ function renderWeek() {
         <span class="day-date">${dateStr}</span>
       </div>`;
 
-    for (const s of sessions) {
-      html += renderCard(s);
+    if (sessions.length === 0) {
+      html += `<div class="rest-day">Rest day</div>`;
+    } else {
+      for (const s of sessions) {
+        html += renderCard(s);
+      }
     }
     html += '</div>';
   }
 
   container.innerHTML = html;
+  renderWeekSidebar();
 }
 
 function renderCard(s) {
@@ -1134,6 +1224,61 @@ function renderExpandBody(s, isChinese) {
   </div>`;
 
   return html;
+}
+
+// ─── Week sidebar ─────────────────────────────────────────────────────────────
+function renderWeekSidebar() {
+  const el = document.getElementById('week-sidebar');
+  if (!el) return;
+
+  const sessions = state.sessions;
+  const TYPE_META = [
+    { key: 'football', label: 'Football', color: 'var(--football)' },
+    { key: 'strength', label: 'Strength', color: 'var(--strength)' },
+    { key: 'speed',    label: 'Speed',    color: 'var(--speed)'    },
+    { key: 'cardio',   label: 'Cardio',   color: 'var(--cardio)'   },
+    { key: 'chinese',  label: 'Chinese',  color: 'var(--chinese)'  },
+  ];
+
+  let typeHtml = '';
+  for (const { key, label, color } of TYPE_META) {
+    const all  = sessions.filter(s => s.type === key);
+    if (all.length === 0) continue;
+    const done = all.filter(s => s.status === 'done').length;
+    const pct  = Math.round((done / all.length) * 100);
+    typeHtml += `
+      <div class="sidebar-type-row">
+        <div class="sidebar-type-header">
+          <span class="sidebar-type-dot" style="background:${color};"></span>
+          <span class="sidebar-type-name">${label}</span>
+          <span class="sidebar-type-count">${done}/${all.length}</span>
+        </div>
+        <div class="sidebar-type-bar">
+          <div class="sidebar-type-fill" style="width:${pct}%;background:${color};"></div>
+        </div>
+      </div>`;
+  }
+
+  const WEEKDAYS = ['monday','tuesday','wednesday','thursday','friday'];
+  const SHORT = { monday:'Mon', tuesday:'Tue', wednesday:'Wed', thursday:'Thu', friday:'Fri' };
+  const officeDays = state.officeDays || [];
+  const officePips = WEEKDAYS.map(d =>
+    `<span class="sidebar-office-pip${officeDays.includes(d) ? ' office' : ''}">${SHORT[d]}</span>`
+  ).join('');
+
+  const noSessions = sessions.length === 0;
+
+  el.innerHTML = `
+    <div class="sidebar-card">
+      <div class="sidebar-section-label">By type</div>
+      ${noSessions
+        ? `<div style="font-size:13px;color:var(--text-dim);">Week not tracked</div>`
+        : typeHtml}
+    </div>
+    <div class="sidebar-card">
+      <div class="sidebar-section-label">Office days</div>
+      <div class="sidebar-office-days">${officePips}</div>
+    </div>`;
 }
 
 function attachCardListeners() {
