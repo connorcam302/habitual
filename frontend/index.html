@@ -682,7 +682,10 @@ function getMondayOfWeek(date) {
 }
 
 function formatISO(date) {
-  return date.toISOString().split('T')[0];
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function currentMondayISO() {
@@ -904,7 +907,6 @@ function renderWeek() {
   }
 
   container.innerHTML = html;
-  attachCardListeners();
 }
 
 function renderCard(s) {
@@ -1185,6 +1187,7 @@ function showApp(show) {
 }
 
 // ─── Boot ────────────────────────────────────────────────────────────────────
+attachCardListeners();
 showLoading(true);
 init();
 </script>
