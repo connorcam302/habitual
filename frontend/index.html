@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#080810" />
+  <title>Habitual</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Space Grotesk', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --bg:          #080810;
+      --surface:     #0f0f1c;
+      --surface-2:   #16162a;
+      --surface-3:   #1e1e35;
+      --border:      #2a2a45;
+      --text:        #eeeeff;
+      --text-muted:  #6b7280;
+      --text-dim:    #4b5563;
+
+      --football: #3b82f6;
+      --strength: #a855f7;
+      --speed:    #f97316;
+      --cardio:   #22c55e;
+      --chinese:  #06b6d4;
+
+      --done:      #22c55e;
+      --injured:   #f59e0b;
+      --cancelled: #ef4444;
+      --skipped:   #6b7280;
+
+      --safe-top:    env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      overscroll-behavior: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ── Scrollable main ── */
+    #main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: calc(72px + var(--safe-bottom));
+      padding-top: calc(var(--safe-top) + 130px);
+    }
+
+    /* ── Sticky header ── */
+    #app-header {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      z-index: 50;
+      padding-top: var(--safe-top);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Bottom tab bar ── */
+    #tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      z-index: 50;
+      padding-bottom: var(--safe-bottom);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Progress bar ── */
+    .progress-track {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #3b82f6, #a855f7);
+      transition: width 0.5s ease;
+    }
+
+    /* ── Day group ── */
+    .day-group { margin-bottom: 24px; }
+    .day-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      margin-bottom: 10px;
+    }
+    .day-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .day-label.today { color: var(--text); }
+    .today-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: #3b82f620;
+      color: #3b82f6;
+      letter-spacing: 0.05em;
+    }
+    .day-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-left: auto;
+    }
+
+    /* ── Session card ── */
+    .card {
+      margin: 0 12px 8px;
+      background: var(--surface);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--type-color, #444);
+      overflow: hidden;
+      transition: opacity 0.2s ease, border-color 0.2s ease;
+      cursor: pointer;
+    }
+    .card:active { opacity: 0.75; }
+
+    .card.status-done      { opacity: 0.55; }
+    .card.status-injured   { border-left-color: var(--injured) !important; }
+    .card.status-cancelled { opacity: 0.45; border-left-color: var(--cancelled) !important; }
+    .card.status-skipped   { opacity: 0.45; }
+
+    .card[data-type="football"] { --type-color: var(--football); }
+    .card[data-type="strength"] { --type-color: var(--strength); }
+    .card[data-type="speed"]    { --type-color: var(--speed); }
+    .card[data-type="cardio"]   { --type-color: var(--cardio); }
+    .card[data-type="chinese"]  { --type-color: var(--chinese); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      padding: 13px 14px;
+      gap: 12px;
+    }
+    .card-type-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--type-color, #444);
+    }
+    .card-info { flex: 1; min-width: 0; }
+    .card-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .card-status-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+    .card-status-btn.done     { border-color: var(--done);      background: #22c55e18; }
+    .card-status-btn.injured  { border-color: var(--injured);   background: #f59e0b18; }
+    .card-status-btn.cancelled{ border-color: var(--cancelled); background: #ef444418; }
+    .card-status-btn.skipped  { border-color: var(--skipped);   background: #6b728018; }
+
+    /* chevron */
+    .card-chevron {
+      font-size: 12px;
+      color: var(--text-dim);
+      transition: transform 0.25s ease;
+      margin-left: 2px;
+      flex-shrink: 0;
+    }
+    .card.expanded .card-chevron { transform: rotate(180deg); }
+
+    /* ── Expandable section (grid trick) ── */
+    .card-expand-wrap {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.28s ease;
+    }
+    .card.expanded .card-expand-wrap { grid-template-rows: 1fr; }
+    .card-expand-inner {
+      overflow: hidden;
+    }
+    .card-expand-body {
+      padding: 0 14px 14px;
+      border-top: 1px solid var(--border);
+      margin-top: 0;
+    }
+
+    /* status buttons inside expand */
+    .status-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .status-pill {
+      flex: 1;
+      min-width: 0;
+      padding: 8px 6px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .status-pill:active { opacity: 0.7; }
+    .status-pill.active-done      { border-color: var(--done);      color: var(--done);      background: #22c55e14; }
+    .status-pill.active-injured   { border-color: var(--injured);   color: var(--injured);   background: #f59e0b14; }
+    .status-pill.active-cancelled { border-color: var(--cancelled); color: var(--cancelled); background: #ef444414; }
+    .status-pill.active-skipped   { border-color: var(--skipped);   color: var(--skipped);   background: #6b728014; }
+
+    /* felt buttons */
+    .felt-section { margin-top: 12px; }
+    .felt-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .felt-row {
+      display: flex;
+      gap: 6px;
+    }
+    .felt-btn {
+      flex: 1;
+      padding: 7px 4px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+    .felt-btn:active { opacity: 0.7; }
+    .felt-btn.active { border-color: #a855f7; color: #a855f7; background: #a855f714; }
+
+    /* notes */
+    .notes-section { margin-top: 12px; }
+    .notes-textarea {
+      width: 100%;
+      background: var(--surface-3);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      padding: 10px 12px;
+      resize: none;
+      outline: none;
+      min-height: 64px;
+    }
+    .notes-textarea::placeholder { color: var(--text-dim); }
+    .notes-textarea:focus { border-color: #3b82f640; }
+
+    /* ── History view ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 16px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .week-row {
+      margin: 0 12px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .week-row-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .week-dates {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .week-pct {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .week-mini-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .week-mini-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #3b82f6, #a855f7);
+    }
+    .week-pills {
+      display: flex;
+      gap: 8px;
+    }
+    .week-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+    .week-pill.done-pill      { background: #22c55e18; color: #22c55e; }
+    .week-pill.injured-pill   { background: #f59e0b18; color: #f59e0b; }
+    .week-pill.cancelled-pill { background: #ef444418; color: #ef4444; }
+    .week-pill.skipped-pill   { background: #6b728018; color: #6b7280; }
+
+    /* ── Office day modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 8, 16, 0.85);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      padding-bottom: var(--safe-bottom);
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal-sheet {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--surface-2);
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      padding: 24px 20px 32px;
+      border-top: 1px solid var(--border);
+    }
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      margin: 0 auto 20px;
+    }
+    .modal-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .modal-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .day-toggles {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .day-toggle {
+      flex: 1;
+      padding: 12px 4px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--surface-3);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .day-toggle.selected {
+      border-color: #3b82f6;
+      background: #3b82f618;
+      color: #3b82f6;
+    }
+    .modal-note {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+      padding: 10px 12px;
+      background: var(--surface-3);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .modal-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #3b82f6, #a855f7);
+      color: white;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+    .modal-btn:active { opacity: 0.85; }
+
+    /* ── Tab bar ── */
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-dim);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      gap: 4px;
+      transition: color 0.15s ease;
+    }
+    .tab-btn.active { color: #3b82f6; }
+    .tab-icon { font-size: 20px; line-height: 1; }
+
+    /* ── Loading ── */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+    #loading-screen.hidden { display: none; }
+    .loader-wordmark {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.25em;
+      color: var(--text-muted);
+      margin-top: 16px;
+    }
+    .loader-dot-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .loader-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #3b82f6;
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+    .loader-dot:nth-child(2) { animation-delay: 0.2s; background: #a855f7; }
+    .loader-dot:nth-child(3) { animation-delay: 0.4s; background: #06b6d4; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--text-muted);
+    }
+    .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state-text { font-size: 15px; }
+
+    /* ── Section heading in history ── */
+    .history-section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      padding: 16px 16px 8px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loading-screen">
+  <div class="loader-dot-row">
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+  </div>
+  <div class="loader-wordmark">HABITUAL</div>
+</div>
+
+<!-- Office day setup modal -->
+<div id="office-modal" class="modal-overlay hidden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Set up this week</div>
+    <div class="modal-subtitle">Which days are you in the office?</div>
+    <div class="day-toggles">
+      <button class="day-toggle" data-day="monday">Mon</button>
+      <button class="day-toggle" data-day="tuesday">Tue</button>
+      <button class="day-toggle" data-day="wednesday">Wed</button>
+      <button class="day-toggle" data-day="thursday">Thu</button>
+      <button class="day-toggle" data-day="friday">Fri</button>
+    </div>
+    <div class="modal-note">
+      Pimsleur commute sessions will be added for your office days (Wed, Thu, Fri only).
+    </div>
+    <button class="modal-btn" id="modal-submit-btn">Start week</button>
+  </div>
+</div>
+
+<!-- Main app -->
+<div id="app" style="display:none; height:100%; display:none;">
+
+  <!-- Sticky header -->
+  <div id="app-header">
+    <div style="padding: 12px 16px 10px;">
+      <!-- Wordmark + week nav -->
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <span style="font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.2em; color:var(--text-muted); font-weight:500;">HABITUAL</span>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button id="edit-office-btn" onclick="openOfficeDayModal(true)" style="font-size:11px; color:var(--text-dim); background:none; border:none; cursor:pointer; font-family:'Space Grotesk',sans-serif;">office days</button>
+        </div>
+      </div>
+      <!-- Week navigation -->
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <button id="prev-week-btn" onclick="navigateWeek(-1)"
+          style="background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:8px 14px; color:var(--text); font-size:18px; cursor:pointer; line-height:1;">‹</button>
+        <div style="text-align:center;">
+          <div id="week-label" style="font-size:16px; font-weight:700; color:var(--text);"></div>
+        </div>
+        <button id="next-week-btn" onclick="navigateWeek(1)"
+          style="background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:8px 14px; color:var(--text); font-size:18px; cursor:pointer; line-height:1;">›</button>
+      </div>
+      <!-- Progress bar -->
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="progress-track" style="flex:1;">
+          <div id="progress-fill" class="progress-fill" style="width:0%;"></div>
+        </div>
+        <div id="progress-label" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted); white-space:nowrap;">0 / 0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main scrollable area -->
+  <div id="main-content">
+    <!-- Week view -->
+    <div id="week-view"></div>
+    <!-- History view -->
+    <div id="history-view" style="display:none;"></div>
+  </div>
+
+  <!-- Bottom tab bar -->
+  <div id="tab-bar">
+    <div style="display:flex;">
+      <button class="tab-btn active" id="tab-week" onclick="switchTab('week')">
+        <span class="tab-icon">📅</span>
+        <span>This Week</span>
+      </button>
+      <button class="tab-btn" id="tab-history" onclick="switchTab('history')">
+        <span class="tab-icon">📊</span>
+        <span>All Time</span>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+const state = {
+  currentWeek: null,   // 'YYYY-MM-DD'
+  sessions: [],
+  officeDays: [],
+  view: 'week',
+  expandedId: null,
+  setupWeek: null,     // week being set up in modal
+  isEditingOfficeDays: false,
+  weeks: [],
+  stats: null,
+};
+
+// ─── Utils ───────────────────────────────────────────────────────────────────
+function getMondayOfWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function formatISO(date) {
+  return date.toISOString().split('T')[0];
+}
+
+function currentMondayISO() {
+  return formatISO(getMondayOfWeek(new Date()));
+}
+
+function addWeeks(isoDate, n) {
+  const d = new Date(isoDate + 'T00:00:00');
+  d.setDate(d.getDate() + n * 7);
+  return formatISO(d);
+}
+
+function formatWeekLabel(mondayISO) {
+  const mon = new Date(mondayISO + 'T00:00:00');
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  const opts = { day: 'numeric', month: 'short' };
+  const monStr = mon.toLocaleDateString('en-GB', opts);
+  const sunStr = sun.toLocaleDateString('en-GB', opts);
+  return `${monStr} – ${sunStr}`;
+}
+
+function todayDayName() {
+  const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  return days[new Date().getDay()];
+}
+
+function dayDisplayName(day) {
+  return { monday:'Monday', tuesday:'Tuesday', wednesday:'Wednesday',
+    thursday:'Thursday', friday:'Friday', saturday:'Saturday', sunday:'Sunday' }[day] || day;
+}
+
+function dayShortName(day) {
+  return { monday:'Mon', tuesday:'Tue', wednesday:'Wed',
+    thursday:'Thu', friday:'Fri', saturday:'Sat', sunday:'Sun' }[day] || day;
+}
+
+function dateForDay(mondayISO, day) {
+  const offsets = { monday:0, tuesday:1, wednesday:2, thursday:3, friday:4, saturday:5, sunday:6 };
+  const d = new Date(mondayISO + 'T00:00:00');
+  d.setDate(d.getDate() + (offsets[day] ?? 0));
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function statusIcon(status) {
+  if (status === 'done')      return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  if (status === 'injured')   return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  if (status === 'cancelled') return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  if (status === 'skipped')   return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  return '';
+}
+
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+// ─── API ─────────────────────────────────────────────────────────────────────
+const api = {
+  async seedAuto() {
+    const r = await fetch('/api/seed-auto', { method: 'POST' });
+    return r.json();
+  },
+  async getSessions(week) {
+    const r = await fetch(`/api/sessions?week=${week}`);
+    return r.json();
+  },
+  async seed(week) {
+    const r = await fetch(`/api/seed?week=${week}`, { method: 'POST' });
+    return r.json();
+  },
+  async setOfficeDays(week_start, days) {
+    const r = await fetch('/api/office-days', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ week_start, days }),
+    });
+    return r.json();
+  },
+  async getOfficeDays(week) {
+    const r = await fetch(`/api/office-days?week=${week}`);
+    return r.json();
+  },
+  async patchSession(id, data) {
+    const r = await fetch(`/api/sessions/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return r.json();
+  },
+  async getWeeks() {
+    const r = await fetch('/api/weeks');
+    return r.json();
+  },
+  async getStats() {
+    const r = await fetch('/api/stats');
+    return r.json();
+  },
+};
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const result = await api.seedAuto();
+
+    if (result.needs_setup) {
+      state.setupWeek = result.week_start;
+      state.currentWeek = result.week_start;
+      showLoading(false);
+      showApp(true);
+      updateWeekLabel();
+      openOfficeDayModal(false);
+    } else {
+      state.currentWeek = result.week_start;
+      await loadWeek(state.currentWeek);
+      showLoading(false);
+      showApp(true);
+    }
+  } catch (e) {
+    showLoading(false);
+    showApp(true);
+    document.getElementById('week-view').innerHTML =
+      '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-text">Could not connect to server.<br/>Check your connection and reload.</div></div>';
+  }
+}
+
+async function loadWeek(weekISO) {
+  state.currentWeek = weekISO;
+  state.expandedId = null;
+  updateWeekLabel();
+
+  const data = await api.getSessions(weekISO);
+
+  if (!data.week_exists) {
+    // Past or future week that hasn't been seeded — show empty
+    state.sessions = [];
+    renderWeek();
+    updateProgress();
+    return;
+  }
+
+  state.sessions = data.sessions;
+
+  const odData = await api.getOfficeDays(weekISO);
+  state.officeDays = odData.office_days || [];
+
+  renderWeek();
+  updateProgress();
+}
+
+// ─── Navigation ──────────────────────────────────────────────────────────────
+function navigateWeek(direction) {
+  const newWeek = addWeeks(state.currentWeek, direction);
+  loadWeek(newWeek);
+}
+
+function updateWeekLabel() {
+  document.getElementById('week-label').textContent = formatWeekLabel(state.currentWeek);
+}
+
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  state.view = tab;
+  document.getElementById('week-view').style.display    = tab === 'week' ? '' : 'none';
+  document.getElementById('history-view').style.display = tab === 'history' ? '' : 'none';
+  document.getElementById('tab-week').classList.toggle('active', tab === 'week');
+  document.getElementById('tab-history').classList.toggle('active', tab === 'history');
+  document.getElementById('edit-office-btn').style.display = tab === 'week' ? '' : 'none';
+
+  if (tab === 'history') loadHistory();
+}
+
+// ─── Progress bar ────────────────────────────────────────────────────────────
+function updateProgress() {
+  const total = state.sessions.length;
+  const done  = state.sessions.filter(s => s.status === 'done').length;
+  const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progress-fill').style.width = `${pct}%`;
+  document.getElementById('progress-label').textContent = `${done} / ${total}`;
+}
+
+// ─── Week render ─────────────────────────────────────────────────────────────
+function renderWeek() {
+  const container = document.getElementById('week-view');
+
+  if (state.sessions.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No sessions for this week.<br/>Navigate to the current week to get started.</div></div>';
+    return;
+  }
+
+  const today = todayDayName();
+  const dayOrder = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  const grouped = {};
+  for (const s of state.sessions) {
+    if (!grouped[s.day]) grouped[s.day] = [];
+    grouped[s.day].push(s);
+  }
+
+  let html = '';
+  for (const day of dayOrder) {
+    const sessions = grouped[day];
+    if (!sessions || sessions.length === 0) continue;
+
+    const isToday = day === today && state.currentWeek === currentMondayISO();
+    const dateStr = dateForDay(state.currentWeek, day);
+
+    html += `<div class="day-group">
+      <div class="day-header">
+        <span class="day-label${isToday ? ' today' : ''}">${dayDisplayName(day)}</span>
+        ${isToday ? '<span class="today-badge">TODAY</span>' : ''}
+        <span class="day-date">${dateStr}</span>
+      </div>`;
+
+    for (const s of sessions) {
+      html += renderCard(s);
+    }
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+  attachCardListeners();
+}
+
+function renderCard(s) {
+  const expanded = state.expandedId === s.id;
+  const isChinese = s.type === 'chinese';
+
+  const statusBtnClass = ['done','injured','cancelled','skipped'].includes(s.status) ? s.status : '';
+
+  return `
+  <div class="card${expanded ? ' expanded' : ''} status-${s.status}" data-type="${s.type}" data-id="${s.id}">
+    <div class="card-header">
+      <div class="card-type-dot"></div>
+      <div class="card-info">
+        <div class="card-name">${s.name}</div>
+        <div class="card-time">${s.time_slot || ''}</div>
+      </div>
+      <button class="card-status-btn ${statusBtnClass}" data-action="quick-done" data-id="${s.id}">
+        ${statusIcon(s.status)}
+      </button>
+      <span class="card-chevron">▾</span>
+    </div>
+    <div class="card-expand-wrap">
+      <div class="card-expand-inner">
+        <div class="card-expand-body">
+          ${renderExpandBody(s, isChinese)}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderExpandBody(s, isChinese) {
+  let html = '';
+
+  // Status pills
+  if (isChinese) {
+    html += `<div class="status-row">
+      <button class="status-pill${s.status === 'done' ? ' active-done' : ''}" data-action="set-status" data-id="${s.id}" data-status="done">Done</button>
+      <button class="status-pill${s.status === 'skipped' ? ' active-skipped' : ''}" data-action="set-status" data-id="${s.id}" data-status="skipped">Skipped</button>
+      <button class="status-pill${s.status === 'pending' ? ' active-pending' : ''}" data-action="set-status" data-id="${s.id}" data-status="pending">Pending</button>
+    </div>`;
+  } else {
+    html += `<div class="status-row">
+      <button class="status-pill${s.status === 'done' ? ' active-done' : ''}" data-action="set-status" data-id="${s.id}" data-status="done">Done</button>
+      <button class="status-pill${s.status === 'injured' ? ' active-injured' : ''}" data-action="set-status" data-id="${s.id}" data-status="injured">Injured</button>
+      <button class="status-pill${s.status === 'cancelled' ? ' active-cancelled' : ''}" data-action="set-status" data-id="${s.id}" data-status="cancelled">Cancelled</button>
+      <button class="status-pill${s.status === 'pending' ? ' active-pending' : ''}" data-action="set-status" data-id="${s.id}" data-status="pending">Pending</button>
+    </div>`;
+
+    // Felt (physical only)
+    const felts = ['great','good','okay','tough'];
+    html += `<div class="felt-section">
+      <div class="felt-label">How did it feel?</div>
+      <div class="felt-row">
+        ${felts.map(f => `<button class="felt-btn${s.felt === f ? ' active' : ''}" data-action="set-felt" data-id="${s.id}" data-felt="${f}">${f.charAt(0).toUpperCase() + f.slice(1)}</button>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Notes (all sessions)
+  html += `<div class="notes-section">
+    <textarea class="notes-textarea" data-action="notes" data-id="${s.id}" placeholder="Add a note…" rows="2">${s.notes || ''}</textarea>
+  </div>`;
+
+  return html;
+}
+
+function attachCardListeners() {
+  const container = document.getElementById('week-view');
+
+  container.addEventListener('click', handleCardClick);
+  container.addEventListener('input', handleNotesInput);
+}
+
+function handleCardClick(e) {
+  const actionEl = e.target.closest('[data-action]');
+  if (actionEl) {
+    e.stopPropagation();
+    const action = actionEl.dataset.action;
+    const id = parseInt(actionEl.dataset.id, 10);
+
+    if (action === 'quick-done') {
+      const session = state.sessions.find(s => s.id === id);
+      if (!session) return;
+      const newStatus = session.status === 'done' ? 'pending' : 'done';
+      updateSessionStatus(id, newStatus);
+      return;
+    }
+    if (action === 'set-status') {
+      updateSessionStatus(id, actionEl.dataset.status);
+      return;
+    }
+    if (action === 'set-felt') {
+      updateSessionFelt(id, actionEl.dataset.felt);
+      return;
+    }
+    return;
+  }
+
+  // Toggle card expand
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const id = parseInt(card.dataset.id, 10);
+  state.expandedId = state.expandedId === id ? null : id;
+  renderWeek();
+}
+
+const saveNotes = debounce(async (id, notes) => {
+  const session = state.sessions.find(s => s.id === id);
+  if (!session) return;
+  session.notes = notes;
+  await api.patchSession(id, { notes });
+}, 900);
+
+function handleNotesInput(e) {
+  if (e.target.dataset.action !== 'notes') return;
+  const id = parseInt(e.target.dataset.id, 10);
+  saveNotes(id, e.target.value);
+}
+
+async function updateSessionStatus(id, status) {
+  const session = state.sessions.find(s => s.id === id);
+  if (!session) return;
+  session.status = status;
+  renderWeek();
+  updateProgress();
+  await api.patchSession(id, { status });
+}
+
+async function updateSessionFelt(id, felt) {
+  const session = state.sessions.find(s => s.id === id);
+  if (!session) return;
+  // Toggle off if already selected
+  session.felt = session.felt === felt ? null : felt;
+  renderWeek();
+  await api.patchSession(id, { felt: session.felt });
+}
+
+// ─── History view ─────────────────────────────────────────────────────────────
+async function loadHistory() {
+  const historyEl = document.getElementById('history-view');
+  historyEl.innerHTML = '<div class="empty-state"><div class="loader-dot-row" style="justify-content:center;"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div></div>';
+
+  const [weeksData, statsData] = await Promise.all([api.getWeeks(), api.getStats()]);
+  state.weeks = weeksData.weeks || [];
+  state.stats = statsData;
+
+  renderHistory();
+}
+
+function renderHistory() {
+  const el = document.getElementById('history-view');
+  const s = state.stats;
+
+  let html = '<div class="history-section-label">All Time</div>';
+  html += `<div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">${s?.completion_rate ?? 0}%</div>
+      <div class="stat-label">Completion rate</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${s?.weeks_tracked ?? 0}</div>
+      <div class="stat-label">Weeks tracked</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${s?.completed ?? 0}</div>
+      <div class="stat-label">Sessions done</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--injured);">${s?.injured ?? 0}</div>
+      <div class="stat-label">Injured${s?.most_injured_type ? `<br><span style="font-size:11px;opacity:0.7;">${s.most_injured_type}</span>` : ''}</div>
+    </div>
+  </div>`;
+
+  if (state.weeks.length > 0) {
+    html += '<div class="history-section-label">Past Weeks</div>';
+    for (const w of state.weeks) {
+      const total = parseInt(w.total, 10) || 0;
+      const done  = parseInt(w.done, 10) || 0;
+      const injured = parseInt(w.injured, 10) || 0;
+      const cancelled = parseInt(w.cancelled, 10) || 0;
+      const skipped = parseInt(w.skipped, 10) || 0;
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+      const mon = new Date(w.week_start + 'T00:00:00');
+      const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+      const label = `${mon.toLocaleDateString('en-GB', { day:'numeric', month:'short' })} – ${sun.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}`;
+
+      html += `<div class="week-row">
+        <div class="week-row-header">
+          <span class="week-dates">${label}</span>
+          <span class="week-pct">${pct}%</span>
+        </div>
+        <div class="week-mini-bar"><div class="week-mini-fill" style="width:${pct}%;"></div></div>
+        <div class="week-pills">
+          <span class="week-pill done-pill">${done} done</span>
+          ${injured > 0 ? `<span class="week-pill injured-pill">${injured} injured</span>` : ''}
+          ${cancelled > 0 ? `<span class="week-pill cancelled-pill">${cancelled} cancelled</span>` : ''}
+          ${skipped > 0 ? `<span class="week-pill skipped-pill">${skipped} skipped</span>` : ''}
+        </div>
+      </div>`;
+    }
+  } else {
+    html += '<div class="empty-state" style="padding:24px;"><div class="empty-state-text" style="color:var(--text-dim);">No history yet</div></div>';
+  }
+
+  el.innerHTML = html;
+}
+
+// ─── Office day modal ────────────────────────────────────────────────────────
+function openOfficeDayModal(isEdit) {
+  state.isEditingOfficeDays = isEdit;
+
+  // Pre-populate toggles
+  const toggles = document.querySelectorAll('#office-modal .day-toggle');
+  if (isEdit) {
+    toggles.forEach(btn => {
+      btn.classList.toggle('selected', state.officeDays.includes(btn.dataset.day));
+    });
+    document.getElementById('modal-submit-btn').textContent = 'Save changes';
+    document.querySelector('.modal-title').textContent = 'Edit office days';
+    document.querySelector('.modal-subtitle').textContent = 'Update which days you\'re in the office this week.';
+  } else {
+    toggles.forEach(btn => btn.classList.remove('selected'));
+    document.getElementById('modal-submit-btn').textContent = 'Start week';
+    document.querySelector('.modal-title').textContent = 'Set up this week';
+    document.querySelector('.modal-subtitle').textContent = 'Which days are you in the office?';
+  }
+
+  document.getElementById('office-modal').classList.remove('hidden');
+}
+
+function closeOfficeDayModal() {
+  document.getElementById('office-modal').classList.add('hidden');
+}
+
+// Day toggle clicks
+document.querySelectorAll('.day-toggle').forEach(btn => {
+  btn.addEventListener('click', () => btn.classList.toggle('selected'));
+});
+
+// Submit office days
+document.getElementById('modal-submit-btn').addEventListener('click', async () => {
+  const selectedDays = [...document.querySelectorAll('.day-toggle.selected')].map(b => b.dataset.day);
+  const weekISO = state.currentWeek || state.setupWeek;
+
+  document.getElementById('modal-submit-btn').disabled = true;
+  document.getElementById('modal-submit-btn').textContent = 'Saving…';
+
+  try {
+    await api.setOfficeDays(weekISO, selectedDays);
+
+    if (!state.isEditingOfficeDays) {
+      // First time — seed the week
+      await api.seed(weekISO);
+    }
+
+    state.officeDays = selectedDays;
+    closeOfficeDayModal();
+    await loadWeek(weekISO);
+  } catch (e) {
+    document.getElementById('modal-submit-btn').textContent = 'Error — try again';
+  } finally {
+    document.getElementById('modal-submit-btn').disabled = false;
+  }
+});
+
+// ─── UI helpers ──────────────────────────────────────────────────────────────
+function showLoading(show) {
+  document.getElementById('loading-screen').classList.toggle('hidden', !show);
+}
+
+function showApp(show) {
+  const app = document.getElementById('app');
+  app.style.display = show ? 'flex' : 'none';
+  app.style.flexDirection = 'column';
+  app.style.height = '100%';
+}
+
+// ─── Boot ────────────────────────────────────────────────────────────────────
+showLoading(true);
+init();
+</script>
+</body>
+</html>
