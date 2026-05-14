@@ -27,28 +27,36 @@
   </script>
   <style>
     :root {
+      /* Surface ramp — violet-tinted, four tonal tiers */
       --bg:          #080810;
       --surface:     #0f0f1c;
       --surface-2:   #16162a;
       --surface-3:   #1e1e35;
       --border:      #2a2a45;
-      --text:        #eeeeff;
-      --text-muted:  #6b7280;
-      --text-dim:    #4b5563;
 
-      --football: #3b82f6;
-      --strength: #a855f7;
-      --speed:    #f97316;
-      --cardio:   #22c55e;
-      --chinese:  #06b6d4;
+      /* Text — violet undertone matching the surface family */
+      --text:        oklch(0.94 0.008 275deg);
+      --text-muted:  oklch(0.53 0.018 276deg);
+      --text-dim:    oklch(0.40 0.014 276deg);
 
-      --done:      #22c55e;
-      --injured:   #f59e0b;
-      --cancelled: #ef4444;
-      --skipped:   #6b7280;
+      /* Category colors — built in OKLCH, no Tailwind defaults */
+      --football: oklch(0.57 0.24 258deg);   /* deep cobalt indigo */
+      --strength: oklch(0.58 0.27 297deg);   /* electric violet */
+      --speed:    oklch(0.67 0.20 38deg);    /* amber-coral */
+      --cardio:   oklch(0.63 0.17 150deg);   /* deep emerald */
+      --chinese:  oklch(0.70 0.14 207deg);   /* arctic precision */
+
+      /* Status signals */
+      --done:      oklch(0.63 0.17 150deg);  /* = cardio */
+      --injured:   oklch(0.73 0.16 62deg);   /* deep amber */
+      --cancelled: oklch(0.57 0.21 22deg);   /* deep crimson */
+      --skipped:   oklch(0.53 0.018 276deg); /* = text-muted */
 
       --safe-top:    env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+      --gradient:     linear-gradient(90deg,  var(--football), var(--strength));
+      --gradient-cta: linear-gradient(135deg, var(--football), var(--strength));
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -114,8 +122,8 @@
     .progress-fill {
       height: 100%;
       border-radius: 2px;
-      background: linear-gradient(90deg, #3b82f6, #a855f7);
-      transition: width 0.5s ease;
+      background: var(--gradient);
+      transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     /* ── Day group ── */
@@ -141,8 +149,8 @@
       font-weight: 600;
       padding: 2px 7px;
       border-radius: 20px;
-      background: #3b82f620;
-      color: #3b82f6;
+      background: color-mix(in oklch, var(--football) 12%, transparent);
+      color: var(--football);
       letter-spacing: 0.05em;
     }
     .day-date {
@@ -157,17 +165,19 @@
       margin: 0 12px 8px;
       background: var(--surface);
       border-radius: 14px;
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--type-color, #444);
+      border: 1px solid var(--type-color, var(--border));
       overflow: hidden;
-      transition: opacity 0.2s ease, border-color 0.2s ease;
+      transition: opacity 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+                  border-color 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+                  background 0.15s cubic-bezier(0.22, 1, 0.36, 1);
       cursor: pointer;
     }
+    .card:hover  { background: var(--surface-2); }
     .card:active { opacity: 0.75; }
 
     .card.status-done      { opacity: 0.55; }
-    .card.status-injured   { border-left-color: var(--injured) !important; }
-    .card.status-cancelled { opacity: 0.45; border-left-color: var(--cancelled) !important; }
+    .card.status-injured   { border-color: var(--injured) !important; }
+    .card.status-cancelled { opacity: 0.45; border-color: var(--cancelled) !important; }
     .card.status-skipped   { opacity: 0.45; }
 
     .card[data-type="football"] { --type-color: var(--football); }
@@ -183,11 +193,11 @@
       gap: 12px;
     }
     .card-type-dot {
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       flex-shrink: 0;
-      background: var(--type-color, #444);
+      background: var(--type-color, var(--border));
     }
     .card-info { flex: 1; min-width: 0; }
     .card-name {
@@ -214,18 +224,20 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: all 0.15s ease;
+      transition: all 0.15s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    .card-status-btn.done     { border-color: var(--done);      background: #22c55e18; }
-    .card-status-btn.injured  { border-color: var(--injured);   background: #f59e0b18; }
-    .card-status-btn.cancelled{ border-color: var(--cancelled); background: #ef444418; }
-    .card-status-btn.skipped  { border-color: var(--skipped);   background: #6b728018; }
+    .card-status-btn:hover { border-color: var(--text-muted); }
+    .card-status-btn:focus-visible { outline: 2px solid var(--football); outline-offset: 2px; }
+    .card-status-btn.done     { border-color: var(--done);      background: color-mix(in oklch, var(--done)      9%, transparent); }
+    .card-status-btn.injured  { border-color: var(--injured);   background: color-mix(in oklch, var(--injured)   9%, transparent); }
+    .card-status-btn.cancelled{ border-color: var(--cancelled); background: color-mix(in oklch, var(--cancelled) 9%, transparent); }
+    .card-status-btn.skipped  { border-color: var(--skipped);   background: color-mix(in oklch, var(--skipped)   9%, transparent); }
 
     /* chevron */
     .card-chevron {
       font-size: 12px;
       color: var(--text-dim);
-      transition: transform 0.25s ease;
+      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
       margin-left: 2px;
       flex-shrink: 0;
     }
@@ -235,7 +247,7 @@
     .card-expand-wrap {
       display: grid;
       grid-template-rows: 0fr;
-      transition: grid-template-rows 0.28s ease;
+      transition: grid-template-rows 0.28s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .card.expanded .card-expand-wrap { grid-template-rows: 1fr; }
     .card-expand-inner {
@@ -266,15 +278,17 @@
       font-weight: 600;
       color: var(--text-muted);
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all 0.15s cubic-bezier(0.22, 1, 0.36, 1);
       text-align: center;
       white-space: nowrap;
     }
+    .status-pill:hover  { border-color: var(--text-muted); color: var(--text); }
     .status-pill:active { opacity: 0.7; }
-    .status-pill.active-done      { border-color: var(--done);      color: var(--done);      background: #22c55e14; }
-    .status-pill.active-injured   { border-color: var(--injured);   color: var(--injured);   background: #f59e0b14; }
-    .status-pill.active-cancelled { border-color: var(--cancelled); color: var(--cancelled); background: #ef444414; }
-    .status-pill.active-skipped   { border-color: var(--skipped);   color: var(--skipped);   background: #6b728014; }
+    .status-pill:focus-visible { outline: 2px solid var(--football); outline-offset: 2px; }
+    .status-pill.active-done      { border-color: var(--done);      color: var(--done);      background: color-mix(in oklch, var(--done)      8%, transparent); }
+    .status-pill.active-injured   { border-color: var(--injured);   color: var(--injured);   background: color-mix(in oklch, var(--injured)   8%, transparent); }
+    .status-pill.active-cancelled { border-color: var(--cancelled); color: var(--cancelled); background: color-mix(in oklch, var(--cancelled) 8%, transparent); }
+    .status-pill.active-skipped   { border-color: var(--skipped);   color: var(--skipped);   background: color-mix(in oklch, var(--skipped)   8%, transparent); }
 
     /* felt buttons */
     .felt-section { margin-top: 12px; }
@@ -301,11 +315,13 @@
       font-weight: 600;
       color: var(--text-muted);
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all 0.15s cubic-bezier(0.22, 1, 0.36, 1);
       text-align: center;
     }
+    .felt-btn:hover  { border-color: var(--strength); color: var(--strength); }
     .felt-btn:active { opacity: 0.7; }
-    .felt-btn.active { border-color: #a855f7; color: #a855f7; background: #a855f714; }
+    .felt-btn:focus-visible { outline: 2px solid var(--strength); outline-offset: 2px; }
+    .felt-btn.active { border-color: var(--strength); color: var(--strength); background: color-mix(in oklch, var(--strength) 8%, transparent); }
 
     /* notes */
     .notes-section { margin-top: 12px; }
@@ -323,7 +339,7 @@
       min-height: 64px;
     }
     .notes-textarea::placeholder { color: var(--text-dim); }
-    .notes-textarea:focus { border-color: #3b82f640; }
+    .notes-textarea:focus { border-color: color-mix(in oklch, var(--football) 30%, transparent); }
 
     /* ── History view ── */
     .stats-grid {
@@ -385,7 +401,7 @@
     .week-mini-fill {
       height: 100%;
       border-radius: 2px;
-      background: linear-gradient(90deg, #3b82f6, #a855f7);
+      background: var(--gradient);
     }
     .week-pills {
       display: flex;
@@ -397,10 +413,10 @@
       padding: 3px 8px;
       border-radius: 20px;
     }
-    .week-pill.done-pill      { background: #22c55e18; color: #22c55e; }
-    .week-pill.injured-pill   { background: #f59e0b18; color: #f59e0b; }
-    .week-pill.cancelled-pill { background: #ef444418; color: #ef4444; }
-    .week-pill.skipped-pill   { background: #6b728018; color: #6b7280; }
+    .week-pill.done-pill      { background: color-mix(in oklch, var(--done)      9%, transparent); color: var(--done); }
+    .week-pill.injured-pill   { background: color-mix(in oklch, var(--injured)   9%, transparent); color: var(--injured); }
+    .week-pill.cancelled-pill { background: color-mix(in oklch, var(--cancelled) 9%, transparent); color: var(--cancelled); }
+    .week-pill.skipped-pill   { background: color-mix(in oklch, var(--skipped)   9%, transparent); color: var(--skipped); }
 
     /* ── Office day modal ── */
     .modal-overlay {
@@ -458,12 +474,14 @@
       color: var(--text-muted);
       cursor: pointer;
       text-align: center;
-      transition: all 0.15s ease;
+      transition: all 0.15s cubic-bezier(0.22, 1, 0.36, 1);
     }
+    .day-toggle:hover { border-color: var(--text-muted); color: var(--text); }
+    .day-toggle:focus-visible { outline: 2px solid var(--football); outline-offset: 2px; }
     .day-toggle.selected {
-      border-color: #3b82f6;
-      background: #3b82f618;
-      color: #3b82f6;
+      border-color: var(--football);
+      background: color-mix(in oklch, var(--football) 9%, transparent);
+      color: var(--football);
     }
     .modal-note {
       font-size: 12px;
@@ -479,15 +497,115 @@
       padding: 16px;
       border-radius: 14px;
       border: none;
-      background: linear-gradient(135deg, #3b82f6, #a855f7);
-      color: white;
+      background: var(--gradient-cta);
+      color: #ffffff;
       font-family: 'Space Grotesk', sans-serif;
       font-size: 16px;
       font-weight: 700;
       cursor: pointer;
-      transition: opacity 0.15s ease;
+      transition: opacity 0.15s cubic-bezier(0.22, 1, 0.36, 1);
     }
+    .modal-btn:hover  { opacity: 0.92; }
     .modal-btn:active { opacity: 0.85; }
+    .modal-btn:focus-visible { outline: 2px solid var(--football); outline-offset: 2px; }
+    .modal-btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 0;
+    }
+    .modal-btn-secondary {
+      flex: 0 0 auto;
+      padding: 16px 20px;
+      border-radius: 14px;
+      border: 1.5px solid var(--border);
+      background: var(--surface-3);
+      color: var(--text-muted);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+                  color 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .modal-btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+    .modal-btn-secondary:focus-visible { outline: 2px solid var(--football); outline-offset: 2px; }
+
+    /* ── Diff list ── */
+    .diff-list {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .diff-item {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .diff-item:last-child { border-bottom: none; }
+    .diff-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .diff-badge-update { background: color-mix(in oklch, var(--football)  9%, transparent); color: var(--football); }
+    .diff-badge-add    { background: color-mix(in oklch, var(--cardio)    9%, transparent); color: var(--cardio); }
+    .diff-badge-remove { background: color-mix(in oklch, var(--cancelled) 9%, transparent); color: var(--cancelled); }
+    .diff-detail { flex: 1; min-width: 0; }
+    .diff-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+    .diff-day {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+    .diff-slots {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .diff-old { text-decoration: line-through; color: var(--text-dim); }
+    .diff-arrow { color: var(--football); }
+    .diff-new { color: var(--text); }
+    .diff-slot-only { color: var(--text-muted); }
+
+    /* ── Editable time slot in card ── */
+    .card-time-input {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+      outline: none;
+      cursor: text;
+      caret-color: var(--football);
+      min-width: 0;
+    }
+    .card-time-input:focus { color: var(--text-muted); }
+    .card-time-input::placeholder { color: var(--text-dim); opacity: 0.4; }
 
     /* ── Tab bar ── */
     .tab-btn {
@@ -505,9 +623,11 @@
       font-size: 11px;
       font-weight: 600;
       gap: 4px;
-      transition: color 0.15s ease;
+      transition: color 0.15s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    .tab-btn.active { color: #3b82f6; }
+    .tab-btn:hover { color: var(--text-muted); }
+    .tab-btn:focus-visible { outline: 2px solid var(--football); outline-offset: 2px; }
+    .tab-btn.active { color: var(--football); }
     .tab-icon { font-size: 20px; line-height: 1; }
 
     /* ── Loading ── */
@@ -538,11 +658,11 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #3b82f6;
+      background: var(--football);
       animation: bounce 1.2s infinite ease-in-out;
     }
-    .loader-dot:nth-child(2) { animation-delay: 0.2s; background: #a855f7; }
-    .loader-dot:nth-child(3) { animation-delay: 0.4s; background: #06b6d4; }
+    .loader-dot:nth-child(2) { animation-delay: 0.2s; background: var(--strength); }
+    .loader-dot:nth-child(3) { animation-delay: 0.4s; background: var(--chinese); }
     @keyframes bounce {
       0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
       40% { transform: scale(1); opacity: 1; }
@@ -612,6 +732,7 @@
       transition: background 0.15s ease;
     }
     .week-nav-btn:hover { background: var(--surface-3); }
+    .week-nav-btn:focus-visible { outline: 2px solid var(--football); outline-offset: 2px; }
     .week-nav-label {
       font-size: 16px;
       font-weight: 700;
@@ -633,6 +754,7 @@
       white-space: nowrap;
     }
     .header-tab.active { background: var(--surface-3); color: var(--text); }
+    .header-tab:focus-visible { outline: 2px solid var(--football); outline-offset: 2px; }
     .header-progress {
       display: flex;
       align-items: center;
@@ -724,8 +846,8 @@
       text-align: center;
     }
     .sidebar-office-pip.office {
-      border-color: #3b82f650;
-      background: #3b82f610;
+      border-color: color-mix(in oklch, var(--football) 30%, transparent);
+      background: color-mix(in oklch, var(--football) 6%, transparent);
       color: var(--text-muted);
     }
 
@@ -809,6 +931,7 @@
       .week-row { margin: 0; }
 
       /* Modal: centered dialog instead of bottom sheet */
+
       .modal-overlay { align-items: center; }
       .modal-sheet {
         border-radius: 20px;
@@ -817,12 +940,21 @@
       }
       .modal-handle { display: none; }
     }
+
+    /* ── Reduced motion ── */
+    @media (prefers-reduced-motion: reduce) {
+      .card, .card-chevron, .card-expand-wrap,
+      .card-status-btn, .status-pill, .felt-btn,
+      .modal-btn, .modal-btn-secondary, .week-nav-btn, .day-toggle,
+      .tab-btn, .header-tab, .progress-fill { transition: none; }
+      .loader-dot { animation: none; opacity: 1; transform: none; }
+    }
   </style>
 </head>
 <body>
 
 <!-- Loading screen -->
-<div id="loading-screen">
+<div id="loading-screen" role="status" aria-label="Loading Habitual">
   <div class="loader-dot-row">
     <div class="loader-dot"></div>
     <div class="loader-dot"></div>
@@ -832,27 +964,40 @@
 </div>
 
 <!-- Office day setup modal -->
-<div id="office-modal" class="modal-overlay hidden">
+<div id="office-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="office-modal-title">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">Set up this week</div>
-    <div class="modal-subtitle">Which days are you in the office?</div>
-    <div class="day-toggles">
-      <button class="day-toggle" data-day="monday">Mon</button>
-      <button class="day-toggle" data-day="tuesday">Tue</button>
-      <button class="day-toggle" data-day="wednesday">Wed</button>
-      <button class="day-toggle" data-day="thursday">Thu</button>
-      <button class="day-toggle" data-day="friday">Fri</button>
+    <div class="modal-title" id="office-modal-title">Set up this week</div>
+    <div class="modal-subtitle" id="office-modal-subtitle">Which days are you in the office?</div>
+
+    <!-- Step 1: day picker -->
+    <div id="modal-step-picker">
+      <div class="day-toggles">
+        <button class="day-toggle" data-day="monday">Mon</button>
+        <button class="day-toggle" data-day="tuesday">Tue</button>
+        <button class="day-toggle" data-day="wednesday">Wed</button>
+        <button class="day-toggle" data-day="thursday">Thu</button>
+        <button class="day-toggle" data-day="friday">Fri</button>
+      </div>
+      <div class="modal-note">
+        Pimsleur commute sessions appear on office days (Wed, Thu, Fri). Exercise sessions shift to evenings when you're in the office.
+      </div>
+      <button class="modal-btn" id="modal-submit-btn">Start week</button>
     </div>
-    <div class="modal-note">
-      Pimsleur commute sessions will be added for your office days (Wed, Thu, Fri only).
+
+    <!-- Step 2: diff preview (shown when editing an already-seeded week) -->
+    <div id="modal-step-diff" style="display:none;">
+      <div id="modal-diff-list" class="diff-list"></div>
+      <div class="modal-btn-row">
+        <button class="modal-btn-secondary" id="modal-back-btn">← Back</button>
+        <button class="modal-btn" id="modal-confirm-btn" style="flex:1;">Confirm changes</button>
+      </div>
     </div>
-    <button class="modal-btn" id="modal-submit-btn">Start week</button>
   </div>
 </div>
 
 <!-- Main app -->
-<div id="app" style="display:none; height:100%; display:none;">
+<div id="app" style="display:none;">
 
   <!-- Sticky header -->
   <div id="app-header">
@@ -865,9 +1010,9 @@
       </div>
       <!-- Week navigation (full-width row on mobile, flex item on desktop) -->
       <div class="week-nav">
-        <button class="week-nav-btn" onclick="navigateWeek(-1)">‹</button>
+        <button class="week-nav-btn" onclick="navigateWeek(-1)" aria-label="Previous week">‹</button>
         <div id="week-label" class="week-nav-label"></div>
-        <button class="week-nav-btn" onclick="navigateWeek(1)">›</button>
+        <button class="week-nav-btn" onclick="navigateWeek(1)" aria-label="Next week">›</button>
       </div>
       <button id="edit-office-btn" class="office-days-link" onclick="openOfficeDayModal(true)">office days</button>
     </div>
@@ -980,10 +1125,11 @@ function dateForDay(mondayISO, day) {
 }
 
 function statusIcon(status) {
-  if (status === 'done')      return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-  if (status === 'injured')   return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
-  if (status === 'cancelled') return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-  if (status === 'skipped')   return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  const s = (c, p) => `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${p}" stroke-linecap="round" stroke-linejoin="round" style="color:var(--${c})">`;;
+  if (status === 'done')      return s('done', '3')      + '<polyline points="20 6 9 17 4 12"/></svg>';
+  if (status === 'injured')   return s('injured', '2.5') + '<line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  if (status === 'cancelled') return s('cancelled', '2.5') + '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  if (status === 'skipped')   return s('skipped', '2.5')   + '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
   return '';
 }
 
@@ -1034,6 +1180,22 @@ const api = {
     const r = await fetch('/api/stats');
     return r.json();
   },
+  async reschedulePreview(week_start, days) {
+    const r = await fetch('/api/reschedule-preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ week_start, days }),
+    });
+    return r.json();
+  },
+  async rescheduleApply(week_start, days) {
+    const r = await fetch('/api/reschedule-apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ week_start, days }),
+    });
+    return r.json();
+  },
 };
 
 // ─── Init ────────────────────────────────────────────────────────────────────
@@ -1070,10 +1232,15 @@ async function loadWeek(weekISO) {
   const data = await api.getSessions(weekISO);
 
   if (!data.week_exists) {
-    // Past or future week that hasn't been seeded — show empty
     state.sessions = [];
+    state.officeDays = [];
     renderWeek();
     updateProgress();
+    // Future or current week not yet set up — prompt immediately
+    if (weekISO >= currentMondayISO()) {
+      state.setupWeek = weekISO;
+      openOfficeDayModal(false);
+    }
     return;
   }
 
@@ -1173,9 +1340,10 @@ function renderCard(s) {
       <div class="card-type-dot"></div>
       <div class="card-info">
         <div class="card-name">${s.name}</div>
-        <div class="card-time">${s.time_slot || ''}</div>
+        <input class="card-time-input" type="text" data-action="time-input" data-id="${s.id}"
+          value="${s.time_slot || ''}" placeholder="Add time" aria-label="Edit time slot">
       </div>
-      <button class="card-status-btn ${statusBtnClass}" data-action="quick-done" data-id="${s.id}">
+      <button class="card-status-btn ${statusBtnClass}" data-action="quick-done" data-id="${s.id}" aria-label="${s.status === 'done' ? 'Mark as pending' : 'Mark as done'}">
         ${statusIcon(s.status)}
       </button>
       <span class="card-chevron">▾</span>
@@ -1283,9 +1451,9 @@ function renderWeekSidebar() {
 
 function attachCardListeners() {
   const container = document.getElementById('week-view');
-
   container.addEventListener('click', handleCardClick);
   container.addEventListener('input', handleNotesInput);
+  container.addEventListener('focusout', handleTimeInputFocusout);
 }
 
 function handleCardClick(e) {
@@ -1312,6 +1480,9 @@ function handleCardClick(e) {
     }
     return;
   }
+
+  // Don't expand when interacting with inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
   // Toggle card expand
   const card = e.target.closest('.card');
@@ -1341,6 +1512,16 @@ async function updateSessionStatus(id, status) {
   renderWeek();
   updateProgress();
   await api.patchSession(id, { status });
+}
+
+function handleTimeInputFocusout(e) {
+  if (e.target.dataset.action !== 'time-input') return;
+  const id = parseInt(e.target.dataset.id, 10);
+  const newTime = e.target.value.trim();
+  const session = state.sessions.find(s => s.id === id);
+  if (!session || session.time_slot === newTime) return;
+  session.time_slot = newTime;
+  api.patchSession(id, { time_slot: newTime });
 }
 
 async function updateSessionFelt(id, felt) {
@@ -1428,21 +1609,19 @@ function renderHistory() {
 // ─── Office day modal ────────────────────────────────────────────────────────
 function openOfficeDayModal(isEdit) {
   state.isEditingOfficeDays = isEdit;
+  showModalStep(1);
 
-  // Pre-populate toggles
   const toggles = document.querySelectorAll('#office-modal .day-toggle');
   if (isEdit) {
-    toggles.forEach(btn => {
-      btn.classList.toggle('selected', state.officeDays.includes(btn.dataset.day));
-    });
-    document.getElementById('modal-submit-btn').textContent = 'Save changes';
-    document.querySelector('.modal-title').textContent = 'Edit office days';
-    document.querySelector('.modal-subtitle').textContent = 'Update which days you\'re in the office this week.';
+    toggles.forEach(btn => btn.classList.toggle('selected', state.officeDays.includes(btn.dataset.day)));
+    document.getElementById('office-modal-title').textContent = 'Edit office days';
+    document.getElementById('office-modal-subtitle').textContent = 'Which days are you in the office this week?';
+    document.getElementById('modal-submit-btn').textContent = 'Preview changes';
   } else {
     toggles.forEach(btn => btn.classList.remove('selected'));
+    document.getElementById('office-modal-title').textContent = 'Set up this week';
+    document.getElementById('office-modal-subtitle').textContent = 'Which days are you in the office?';
     document.getElementById('modal-submit-btn').textContent = 'Start week';
-    document.querySelector('.modal-title').textContent = 'Set up this week';
-    document.querySelector('.modal-subtitle').textContent = 'Which days are you in the office?';
   }
 
   document.getElementById('office-modal').classList.remove('hidden');
@@ -1452,34 +1631,118 @@ function closeOfficeDayModal() {
   document.getElementById('office-modal').classList.add('hidden');
 }
 
+function showModalStep(step) {
+  document.getElementById('modal-step-picker').style.display = step === 1 ? '' : 'none';
+  document.getElementById('modal-step-diff').style.display   = step === 2 ? '' : 'none';
+}
+
+function renderDiffList(changes) {
+  const DAY_SHORT = { monday:'Mon', tuesday:'Tue', wednesday:'Wed', thursday:'Thu', friday:'Fri', saturday:'Sat', sunday:'Sun' };
+  return changes.map(c => {
+    const badge = c.type === 'add' ? 'add' : c.type === 'remove' ? 'remove' : 'update';
+    const label = c.type === 'add' ? 'Add' : c.type === 'remove' ? 'Remove' : 'Shift';
+    const dayStr = DAY_SHORT[c.day] || c.day;
+    let slotsHtml = '';
+    if (c.type === 'update') {
+      slotsHtml = `<span class="diff-old">${c.old_slot}</span><span class="diff-arrow">→</span><span class="diff-new">${c.new_slot}</span>`;
+    } else if (c.type === 'add') {
+      slotsHtml = `<span class="diff-slot-only">${c.new_slot}</span>`;
+    } else {
+      slotsHtml = `<span class="diff-slot-only">${c.old_slot}</span>`;
+    }
+    return `<div class="diff-item">
+      <span class="diff-badge diff-badge-${badge}">${label}</span>
+      <div class="diff-detail">
+        <div class="diff-name">${c.name}</div>
+        <div class="diff-day">${dayStr}</div>
+        <div class="diff-slots">${slotsHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 // Day toggle clicks
 document.querySelectorAll('.day-toggle').forEach(btn => {
   btn.addEventListener('click', () => btn.classList.toggle('selected'));
 });
 
-// Submit office days
+// Step 1: Start week (new) or Preview changes (edit)
 document.getElementById('modal-submit-btn').addEventListener('click', async () => {
-  const selectedDays = [...document.querySelectorAll('.day-toggle.selected')].map(b => b.dataset.day);
+  const selectedDays = [...document.querySelectorAll('#modal-step-picker .day-toggle.selected')].map(b => b.dataset.day);
   const weekISO = state.currentWeek || state.setupWeek;
+  const btn = document.getElementById('modal-submit-btn');
 
-  document.getElementById('modal-submit-btn').disabled = true;
-  document.getElementById('modal-submit-btn').textContent = 'Saving…';
-
-  try {
-    await api.setOfficeDays(weekISO, selectedDays);
-
-    if (!state.isEditingOfficeDays) {
-      // First time — seed the week
+  if (!state.isEditingOfficeDays) {
+    // New week — seed immediately
+    btn.disabled = true;
+    btn.textContent = 'Setting up…';
+    try {
+      await api.setOfficeDays(weekISO, selectedDays);
       await api.seed(weekISO);
+      state.officeDays = selectedDays;
+      closeOfficeDayModal();
+      await loadWeek(weekISO);
+    } catch (e) {
+      btn.textContent = 'Error — try again';
+    } finally {
+      btn.disabled = false;
     }
+    return;
+  }
 
-    state.officeDays = selectedDays;
-    closeOfficeDayModal();
-    await loadWeek(weekISO);
+  // Editing — fetch preview first
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+  try {
+    const { changes } = await api.reschedulePreview(weekISO, selectedDays);
+    if (!changes || changes.length === 0) {
+      // No schedule changes — just update office days record and close
+      await api.setOfficeDays(weekISO, selectedDays);
+      state.officeDays = selectedDays;
+      closeOfficeDayModal();
+      renderWeekSidebar();
+    } else {
+      // Show diff
+      document.getElementById('modal-diff-list').innerHTML = renderDiffList(changes);
+      document.getElementById('office-modal-subtitle').textContent =
+        `${changes.length} session${changes.length === 1 ? '' : 's'} would change.`;
+      showModalStep(2);
+      // Store selected days for confirm step
+      document.getElementById('modal-confirm-btn').dataset.days = JSON.stringify(selectedDays);
+    }
   } catch (e) {
-    document.getElementById('modal-submit-btn').textContent = 'Error — try again';
+    btn.textContent = 'Error — try again';
   } finally {
-    document.getElementById('modal-submit-btn').disabled = false;
+    btn.disabled = false;
+    btn.textContent = 'Preview changes';
+  }
+});
+
+// Step 2: Back
+document.getElementById('modal-back-btn').addEventListener('click', () => {
+  document.getElementById('office-modal-subtitle').textContent = 'Which days are you in the office this week?';
+  showModalStep(1);
+});
+
+// Step 2: Confirm
+document.getElementById('modal-confirm-btn').addEventListener('click', async () => {
+  const weekISO = state.currentWeek || state.setupWeek;
+  const days = JSON.parse(document.getElementById('modal-confirm-btn').dataset.days || '[]');
+  const btn = document.getElementById('modal-confirm-btn');
+  btn.disabled = true;
+  btn.textContent = 'Applying…';
+  try {
+    const result = await api.rescheduleApply(weekISO, days);
+    state.officeDays = days;
+    state.sessions = result.sessions || [];
+    closeOfficeDayModal();
+    renderWeek();
+    updateProgress();
+  } catch (e) {
+    btn.textContent = 'Error — try again';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Confirm changes';
   }
 });
 

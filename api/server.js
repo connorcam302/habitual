@@ -12,25 +12,104 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'frontend')));
 
-// ─── Session template ────────────────────────────────────────────────────────
-// Commute sessions (is_commute: true) are only seeded for office days.
+// ─── Session templates ───────────────────────────────────────────────────────
+// Each session has a wfh_slot (WFH day time) and office_slot (office day time).
+// Commute sessions (is_commute: true) only appear on office days.
+// null wfh_slot means session only exists on office days.
 const SESSION_TEMPLATES = [
-  { day: 'monday',    type: 'speed',    name: 'Dynamic warmup',      time_slot: '7:30 – 7:50',   is_commute: false, sort_order: 1 },
-  { day: 'monday',    type: 'speed',    name: 'Sprint & plyo block', time_slot: '7:50 – 8:10',   is_commute: false, sort_order: 2 },
-  { day: 'monday',    type: 'strength', name: 'Lower body strength', time_slot: '8:10 – 8:40',   is_commute: false, sort_order: 3 },
-  { day: 'monday',    type: 'chinese',  name: 'Anki',                time_slot: '21:30 – 21:40', is_commute: false, sort_order: 4 },
-  { day: 'tuesday',   type: 'football', name: '5-a-side football',   time_slot: '19:00 – 20:00', is_commute: false, sort_order: 1 },
-  { day: 'tuesday',   type: 'chinese',  name: 'Anki',                time_slot: '21:30 – 21:40', is_commute: false, sort_order: 2 },
-  { day: 'wednesday', type: 'strength', name: 'Upper body & core',   time_slot: 'Before work',   is_commute: false, sort_order: 1 },
-  { day: 'wednesday', type: 'chinese',  name: 'Pimsleur',            time_slot: 'Commute × 2',   is_commute: true,  sort_order: 2 },
-  { day: 'wednesday', type: 'cardio',   name: 'Zone 2 jog',          time_slot: '19:30 – 20:00', is_commute: false, sort_order: 3 },
-  { day: 'wednesday', type: 'football', name: 'Ball mastery drills', time_slot: '20:00 – 20:30', is_commute: false, sort_order: 4 },
-  { day: 'thursday',  type: 'chinese',  name: 'Pimsleur',            time_slot: 'Commute × 2',   is_commute: true,  sort_order: 1 },
-  { day: 'thursday',  type: 'football', name: '5-a-side football',   time_slot: '20:00 – 21:00', is_commute: false, sort_order: 2 },
-  { day: 'thursday',  type: 'chinese',  name: 'Anki',                time_slot: '21:30 – 21:40', is_commute: false, sort_order: 3 },
-  { day: 'friday',    type: 'chinese',  name: 'Pimsleur',            time_slot: 'Commute × 2',   is_commute: true,  sort_order: 1 },
-  { day: 'sunday',    type: 'football', name: '11-a-side match',     time_slot: '10:30',         is_commute: false, sort_order: 1 },
+  // Monday: speed + strength block — morning on WFH, evening on office days (capped at 60 min total)
+  { day: 'monday',    type: 'speed',    name: 'Dynamic warmup',      wfh_slot: '7:30 – 7:50',   office_slot: '18:30 – 18:45', is_commute: false, sort_order: 1 },
+  { day: 'monday',    type: 'speed',    name: 'Sprint & plyo block', wfh_slot: '7:50 – 8:10',   office_slot: '18:45 – 19:05', is_commute: false, sort_order: 2 },
+  { day: 'monday',    type: 'strength', name: 'Lower body strength', wfh_slot: '8:10 – 8:40',   office_slot: '19:05 – 19:30', is_commute: false, sort_order: 3 },
+  { day: 'monday',    type: 'chinese',  name: 'Anki',                wfh_slot: '21:30 – 21:40', office_slot: '21:30 – 21:40', is_commute: false, sort_order: 4 },
+  // Tuesday: fixed 5-a-side + Anki
+  { day: 'tuesday',   type: 'football', name: '5-a-side football',   wfh_slot: '19:00 – 20:00', office_slot: '19:00 – 20:00', is_commute: false, sort_order: 1 },
+  { day: 'tuesday',   type: 'chinese',  name: 'Anki',                wfh_slot: '21:30 – 21:40', office_slot: '21:30 – 21:40', is_commute: false, sort_order: 2 },
+  // Wednesday: strength is WFH-morning only (office_slot: null = skip on office days).
+  // Office Wednesday evening: cardio + ball mastery = 60 min total.
+  { day: 'wednesday', type: 'strength', name: 'Upper body & core',   wfh_slot: '7:00 – 8:00',   office_slot: null,            is_commute: false, sort_order: 1 },
+  { day: 'wednesday', type: 'chinese',  name: 'Pimsleur',            wfh_slot: null,             office_slot: 'Commute × 2',   is_commute: true,  sort_order: 2 },
+  { day: 'wednesday', type: 'cardio',   name: 'Zone 2 jog',          wfh_slot: '19:30 – 20:00', office_slot: '19:00 – 19:30', is_commute: false, sort_order: 3 },
+  { day: 'wednesday', type: 'football', name: 'Ball mastery drills', wfh_slot: '20:00 – 20:30', office_slot: '19:30 – 20:00', is_commute: false, sort_order: 4 },
+  // Thursday: commute Pimsleur + fixed 5-a-side + Anki
+  { day: 'thursday',  type: 'chinese',  name: 'Pimsleur',            wfh_slot: null,             office_slot: 'Commute × 2',   is_commute: true,  sort_order: 1 },
+  { day: 'thursday',  type: 'football', name: '5-a-side football',   wfh_slot: '20:00 – 21:00', office_slot: '20:00 – 21:00', is_commute: false, sort_order: 2 },
+  { day: 'thursday',  type: 'chinese',  name: 'Anki',                wfh_slot: '21:30 – 21:40', office_slot: '21:30 – 21:40', is_commute: false, sort_order: 3 },
+  // Friday: commute Pimsleur only
+  { day: 'friday',    type: 'chinese',  name: 'Pimsleur',            wfh_slot: null,             office_slot: 'Commute × 2',   is_commute: true,  sort_order: 1 },
+  // Sunday: fixed match
+  { day: 'sunday',    type: 'football', name: '11-a-side match',     wfh_slot: '10:30',          office_slot: '10:30',         is_commute: false, sort_order: 1 },
 ];
+
+// Build the list of sessions to insert for a given set of office days.
+function buildWeekSchedule(officeDays) {
+  const officeSet = new Set(officeDays);
+  const result = [];
+  for (const t of SESSION_TEMPLATES) {
+    const isOfficeDay = officeSet.has(t.day);
+    if (t.is_commute && !isOfficeDay) continue;            // commute sessions: office days only
+    if (!isOfficeDay && t.wfh_slot === null) continue;     // no WFH version
+    if (isOfficeDay && t.office_slot === null) continue;   // WFH-only session (e.g. Wed morning strength)
+    result.push({
+      day: t.day,
+      type: t.type,
+      name: t.name,
+      time_slot: isOfficeDay ? t.office_slot : t.wfh_slot,
+      is_commute: t.is_commute || false,
+      sort_order: t.sort_order,
+    });
+  }
+  return result;
+}
+
+// Compute which pending sessions would change given new office days.
+// Returns array of {type:'update'|'add'|'remove', session_id?, name, day, old_slot?, new_slot?}
+function computeRescheduleChanges(currentSessions, newSchedule) {
+  const pending = currentSessions.filter(s => s.status === 'pending');
+  const currentMap = new Map(pending.map(s => [`${s.day}:${s.name}`, s]));
+  const newMap     = new Map(newSchedule.map(t => [`${t.day}:${t.name}`, t]));
+
+  const changes = [];
+  for (const [key, s] of currentMap) {
+    const next = newMap.get(key);
+    if (!next) {
+      changes.push({ type: 'remove', session_id: s.id, name: s.name, day: s.day, old_slot: s.time_slot });
+    } else if (next.time_slot !== s.time_slot) {
+      changes.push({ type: 'update', session_id: s.id, name: s.name, day: s.day, old_slot: s.time_slot, new_slot: next.time_slot });
+    }
+  }
+  for (const [key, t] of newMap) {
+    if (!currentMap.has(key)) {
+      changes.push({ type: 'add', name: t.name, day: t.day, new_slot: t.time_slot });
+    }
+  }
+  return changes;
+}
+
+// Apply a reschedule: update time slots, remove stale sessions, insert new ones.
+async function applyReschedule(weekId, newSchedule, currentSessions) {
+  const pending    = currentSessions.filter(s => s.status === 'pending');
+  const currentMap = new Map(pending.map(s => [`${s.day}:${s.name}`, s]));
+  const newMap     = new Map(newSchedule.map(t => [`${t.day}:${t.name}`, t]));
+
+  for (const [key, s] of currentMap) {
+    const next = newMap.get(key);
+    if (!next) {
+      await pool.query('DELETE FROM sessions WHERE id = $1', [s.id]);
+    } else if (next.time_slot !== s.time_slot) {
+      await pool.query('UPDATE sessions SET time_slot = $1 WHERE id = $2', [next.time_slot, s.id]);
+    }
+  }
+  for (const [key, t] of newMap) {
+    if (!currentMap.has(key)) {
+      await pool.query(
+        `INSERT INTO sessions (week_id, day, type, name, time_slot, is_commute, status, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7)`,
+        [weekId, t.day, t.type, t.name, t.time_slot, t.is_commute, t.sort_order]
+      );
+    }
+  }
+}
 
 const DAY_ORDER_SQL = `CASE day
   WHEN 'monday'    THEN 1
@@ -65,9 +144,8 @@ async function getOrCreateWeek(weekStart) {
 }
 
 async function seedWeek(weekId, officeDays) {
-  const officeSet = new Set(officeDays);
-  const toInsert = SESSION_TEMPLATES.filter(t => !t.is_commute || officeSet.has(t.day));
-  for (const t of toInsert) {
+  const schedule = buildWeekSchedule(officeDays);
+  for (const t of schedule) {
     await pool.query(
       `INSERT INTO sessions (week_id, day, type, name, time_slot, is_commute, status, sort_order)
        VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7)`,
@@ -170,15 +248,16 @@ app.post('/api/seed-auto', async (req, res) => {
 app.patch('/api/sessions/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, felt, notes } = req.body;
+    const { status, felt, notes, time_slot } = req.body;
 
     const setClauses = [];
     const values = [];
     let i = 1;
 
-    if (status !== undefined) { setClauses.push(`status = $${i++}`); values.push(status); }
-    if (felt !== undefined)   { setClauses.push(`felt = $${i++}`);   values.push(felt); }
-    if (notes !== undefined)  { setClauses.push(`notes = $${i++}`);  values.push(notes); }
+    if (status    !== undefined) { setClauses.push(`status = $${i++}`);    values.push(status); }
+    if (felt      !== undefined) { setClauses.push(`felt = $${i++}`);      values.push(felt); }
+    if (notes     !== undefined) { setClauses.push(`notes = $${i++}`);     values.push(notes); }
+    if (time_slot !== undefined) { setClauses.push(`time_slot = $${i++}`); values.push(time_slot); }
 
     if (setClauses.length === 0) return res.status(400).json({ error: 'Nothing to update' });
 
@@ -308,6 +387,54 @@ app.post('/api/office-days', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// POST /api/reschedule-preview  body: { week_start, days: [...] }
+// Returns the list of changes (updates/adds/removes) that would occur for pending sessions.
+app.post('/api/reschedule-preview', async (req, res) => {
+  try {
+    const { week_start, days } = req.body;
+    if (!week_start || !Array.isArray(days)) {
+      return res.status(400).json({ error: 'week_start and days[] required' });
+    }
+    const weekRow = await pool.query('SELECT id FROM weeks WHERE week_start = $1', [week_start]);
+    if (weekRow.rows.length === 0) return res.json({ changes: [] });
+
+    const currentSessions = await getSessionsForWeek(weekRow.rows[0].id);
+    const newSchedule = buildWeekSchedule(days);
+    const changes = computeRescheduleChanges(currentSessions, newSchedule);
+    res.json({ changes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/reschedule-apply  body: { week_start, days: [...] }
+// Saves new office days and applies the reschedule to pending sessions.
+app.post('/api/reschedule-apply', async (req, res) => {
+  try {
+    const { week_start, days } = req.body;
+    if (!week_start || !Array.isArray(days)) {
+      return res.status(400).json({ error: 'week_start and days[] required' });
+    }
+    const weekId = await getOrCreateWeek(week_start);
+    const currentSessions = await getSessionsForWeek(weekId);
+    const newSchedule = buildWeekSchedule(days);
+
+    await pool.query('DELETE FROM office_days WHERE week_id = $1', [weekId]);
+    for (const day of days) {
+      await pool.query('INSERT INTO office_days (week_id, day) VALUES ($1, $2)', [weekId, day]);
+    }
+
+    await applyReschedule(weekId, newSchedule, currentSessions);
+    const sessions = await getSessionsForWeek(weekId);
+    res.json({ sessions });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Widget script (served so the browser preview can fetch it same-origin)
+app.use('/widget', express.static(path.join(__dirname, 'widget')));
 
 // Catch-all — serve the SPA
 app.get('*', (_req, res) => {

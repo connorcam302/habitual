@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Widget Preview — Habitual</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #080810;
+      color: #eeeeff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px;
+      gap: 36px;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .wordmark {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      color: oklch(0.53 0.018 276deg);
+      text-transform: uppercase;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .url-input {
+      background: #0f0f1c;
+      border: 1px solid #2a2a45;
+      color: #eeeeff;
+      padding: 9px 13px;
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      width: 260px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .url-input:focus { border-color: oklch(0.57 0.24 258deg); }
+
+    .refresh-btn {
+      background: linear-gradient(135deg, oklch(0.57 0.24 258deg), oklch(0.58 0.27 297deg));
+      border: none;
+      color: #fff;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .refresh-btn:hover { opacity: 0.9; }
+    .refresh-btn:disabled { opacity: 0.5; cursor: default; }
+
+    .sizes {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .size-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .size-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: oklch(0.40 0.014 276deg);
+    }
+
+    .widget-frame {
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+    .widget-small  { width: 169px; height: 169px; }
+    .widget-medium { width: 360px; height: 169px; }
+
+    .frame-loading, .frame-error {
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0f0f1c;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-align: center;
+      padding: 16px;
+    }
+    .frame-loading { color: oklch(0.40 0.014 276deg); }
+    .frame-error   { color: oklch(0.57 0.21 22deg); }
+
+    /* Rendered widget internals */
+    .w-root {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .w-stack-h { display: flex; flex-direction: row; }
+    .w-stack-v { display: flex; flex-direction: column; }
+    .w-center  { align-items: center; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">Habitual — Widget Preview</div>
+  <div class="controls">
+    <input class="url-input" id="base-url" type="text" value="http://localhost:8001" spellcheck="false" />
+    <button class="refresh-btn" id="refresh-btn" onclick="loadAll()">Refresh</button>
+  </div>
+</header>
+
+<div class="sizes">
+  <div class="size-group">
+    <div class="size-label">Small</div>
+    <div class="widget-frame widget-small" id="frame-small"></div>
+  </div>
+  <div class="size-group">
+    <div class="size-label">Medium</div>
+    <div class="widget-frame widget-medium" id="frame-medium"></div>
+  </div>
+</div>
+
+<script>
+// ── Scriptable runtime mock ──────────────────────────────────────────────────
+
+class Color {
+  constructor(hex, alpha = 1) { this.hex = hex; this.alpha = alpha; }
+}
+
+class Font {
+  constructor(css) { this.css = css; }
+  static systemFont(s)               { return new Font(`400 ${s}px -apple-system,BlinkMacSystemFont,sans-serif`); }
+  static boldSystemFont(s)           { return new Font(`700 ${s}px -apple-system,BlinkMacSystemFont,sans-serif`); }
+  static semiboldSystemFont(s)       { return new Font(`600 ${s}px -apple-system,BlinkMacSystemFont,sans-serif`); }
+  static lightSystemFont(s)          { return new Font(`300 ${s}px -apple-system,BlinkMacSystemFont,sans-serif`); }
+  static italicSystemFont(s)         { return new Font(`italic 400 ${s}px -apple-system,BlinkMacSystemFont,sans-serif`); }
+  static monospacedSystemFont(s)     { return new Font(`400 ${s}px 'JetBrains Mono',ui-monospace,monospace`); }
+  static boldMonospacedSystemFont(s) { return new Font(`700 ${s}px 'JetBrains Mono',ui-monospace,monospace`); }
+  static mediumMonospacedSystemFont(s) { return new Font(`500 ${s}px 'JetBrains Mono',ui-monospace,monospace`); }
+}
+
+class Size { constructor(w, h) { this.w = w; this.h = h; } }
+
+class WidgetText {
+  constructor(str) {
+    this._type = 'text';
+    this.str = String(str);
+    this.font = Font.systemFont(14);
+    this.textColor = new Color('#ffffff');
+    this.lineLimit = 0;
+    this.minimumScaleFactor = 1;
+    this.shadowRadius = 0;
+    this.shadowOffset = { width: 0, height: 0 };
+    this.shadowColor = new Color('#000000');
+  }
+}
+
+class WidgetSpacer {
+  constructor(size) { this._type = 'spacer'; this.size = size ?? null; }
+}
+
+class WidgetStack {
+  constructor() {
+    this._type = 'stack';
+    this._children = [];
+    this.isHorizontal = false;
+    this.centerAlign = false;
+    this.spacing = 0;
+    this._size = null;
+    this.backgroundColor = null;
+    this.cornerRadius = 0;
+    this.borderColor = null;
+    this.borderWidth = 0;
+    this.url = null;
+  }
+  layoutHorizontally() { this.isHorizontal = true; }
+  layoutVertically()   { this.isHorizontal = false; }
+  centerAlignContent() { this.centerAlign = true; }
+  topAlignContent()    {}
+  bottomAlignContent() {}
+  addStack() { const s = new WidgetStack(); this._children.push(s); return s; }
+  addText(str) { const t = new WidgetText(str ?? ''); this._children.push(t); return t; }
+  addSpacer(n) { const s = new WidgetSpacer(n); this._children.push(s); return {}; }
+  addImage() { const img = { _type: 'image', imageSize: null }; this._children.push(img); return img; }
+  set size(s) { this._size = s; }
+  get size()  { return this._size; }
+}
+
+class ListWidget extends WidgetStack {
+  constructor() {
+    super();
+    this.backgroundColor = new Color('#1c1c1e');
+    this._padding = [16, 16, 16, 16];
+    this.url = null;
+    this.refreshAfterDate = null;
+  }
+  setPadding(t, l, b, r) { this._padding = [t, l, b, r]; }
+  presentSmall()  {}
+  presentMedium() {}
+  presentLarge()  {}
+}
+
+const Script = { setWidget() {}, complete() {} };
+
+// ── DOM renderer ─────────────────────────────────────────────────────────────
+
+function colorCSS(c) {
+  if (!c) return 'transparent';
+  if (typeof c === 'string') return c;
+  if (!(c instanceof Color)) return 'transparent';
+  const hex = c.hex || '#ffffff';
+  if (c.alpha < 1) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${c.alpha})`;
+  }
+  return hex;
+}
+
+function renderChild(node, parentEl) {
+  if (node._type === 'spacer') {
+    const el = document.createElement('div');
+    if (node.size !== null && node.size !== undefined) {
+      el.style.cssText = `min-width:${node.size}px;min-height:${node.size}px;flex-shrink:0;`;
+    } else {
+      el.style.flex = '1 1 0';
+    }
+    parentEl.appendChild(el);
+    return;
+  }
+
+  if (node._type === 'text') {
+    const el = document.createElement('span');
+    el.textContent = node.str;
+    el.style.display = 'block';
+    el.style.lineHeight = '1.2';
+    if (node.font) el.style.font = node.font.css;
+    el.style.color = colorCSS(node.textColor);
+    if (node.lineLimit === 1) {
+      el.style.overflow = 'hidden';
+      el.style.textOverflow = 'ellipsis';
+      el.style.whiteSpace = 'nowrap';
+      el.style.maxWidth = '100%';
+    }
+    parentEl.appendChild(el);
+    return;
+  }
+
+  if (node._type === 'image') {
+    const el = document.createElement('div');
+    el.style.cssText = 'width:20px;height:20px;background:#333;border-radius:3px;flex-shrink:0;';
+    parentEl.appendChild(el);
+    return;
+  }
+
+  if (node._type === 'stack') {
+    const el = document.createElement('div');
+    el.style.display = 'flex';
+    el.style.flexDirection = node.isHorizontal ? 'row' : 'column';
+    if (node.centerAlign) el.style.alignItems = 'center';
+    if (node.spacing > 0) el.style.gap = node.spacing + 'px';
+    if (node.backgroundColor) el.style.background = colorCSS(node.backgroundColor);
+    if (node.cornerRadius > 0) el.style.borderRadius = node.cornerRadius + 'px';
+    if (node.borderWidth > 0 && node.borderColor) {
+      el.style.border = `${node.borderWidth}px solid ${colorCSS(node.borderColor)}`;
+    }
+    if (node._size) {
+      if (node._size.w > 0) { el.style.width = node._size.w + 'px'; el.style.flexShrink = '0'; }
+      if (node._size.h > 0) { el.style.height = node._size.h + 'px'; el.style.flexShrink = '0'; }
+      if (node._size.w === 0 && node._size.h > 0) el.style.flexShrink = '0';
+    }
+    for (const child of node._children) renderChild(child, el);
+    parentEl.appendChild(el);
+    return;
+  }
+}
+
+function mountWidget(widget, containerEl) {
+  containerEl.innerHTML = '';
+  const root = document.createElement('div');
+  const [pt, pl, pb, pr] = widget._padding;
+  root.style.cssText = `
+    background:${colorCSS(widget.backgroundColor)};
+    padding:${pt}px ${pr}px ${pb}px ${pl}px;
+    width:100%;height:100%;
+    box-sizing:border-box;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  `;
+  for (const child of widget._children) renderChild(child, root);
+  containerEl.appendChild(root);
+}
+
+// ── Run widget script in mock context ────────────────────────────────────────
+
+async function runWidget(scriptText, baseUrl, family) {
+  // Patch BASE_URL in script
+  const patched = scriptText.replace(
+    /const BASE_URL\s*=\s*["'][^"']*["']/,
+    `const BASE_URL = ${JSON.stringify(baseUrl)}`
+  );
+
+  // Capture the widget instance via presentSmall/Medium
+  let captured = null;
+  const PresentableWidget = class extends ListWidget {
+    presentSmall()  { captured = this; }
+    presentMedium() { captured = this; }
+    presentLarge()  { captured = this; }
+  };
+
+  const configObj = { widgetFamily: family, runsInWidget: false };
+
+  const MockRequest = class {
+    constructor(url) { this.url = url; this.timeoutInterval = 60; }
+    async loadJSON()   { const r = await fetch(this.url); return r.json(); }
+    async loadString() { const r = await fetch(this.url); return r.text(); }
+  };
+
+  // Wrap script in a function with mock globals injected as params
+  const fn = new Function(
+    'Color', 'Font', 'Size', 'Request', 'ListWidget', 'config', 'Script',
+    '"use strict";\n' + patched + '\nreturn run();'
+  );
+
+  await fn(Color, Font, Size, MockRequest, PresentableWidget, configObj, Script);
+  return captured;
+}
+
+// ── Main ─────────────────────────────────────────────────────────────────────
+
+async function loadAll() {
+  const baseUrl = document.getElementById('base-url').value.trim().replace(/\/$/, '');
+  const btn = document.getElementById('refresh-btn');
+  btn.disabled = true;
+  btn.textContent = 'Loading…';
+
+  const frames = [
+    { id: 'frame-small',  family: 'small'  },
+    { id: 'frame-medium', family: 'medium' },
+  ];
+
+  // Show loading state
+  for (const { id } of frames) {
+    document.getElementById(id).innerHTML =
+      '<div class="frame-loading">Loading…</div>';
+  }
+
+  let scriptText;
+  try {
+    scriptText = await fetch('/widget/weekly-plan.js?t=' + Date.now()).then(r => {
+      if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+      return r.text();
+    });
+  } catch (e) {
+    for (const { id } of frames) {
+      document.getElementById(id).innerHTML =
+        `<div class="frame-error">Could not load widget script<br/><br/>${e.message}</div>`;
+    }
+    btn.disabled = false;
+    btn.textContent = 'Refresh';
+    return;
+  }
+
+  for (const { id, family } of frames) {
+    const frameEl = document.getElementById(id);
+    try {
+      const widget = await runWidget(scriptText, baseUrl, family);
+      if (widget) {
+        mountWidget(widget, frameEl);
+      } else {
+        frameEl.innerHTML = '<div class="frame-error">Widget did not call present()</div>';
+      }
+    } catch (e) {
+      frameEl.innerHTML =
+        `<div class="frame-error">Error<br/><br/>${e.message}</div>`;
+      console.error(e);
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Refresh';
+}
+
+// Auto-load on page open
+loadAll();
+</script>
+</body>
+</html>
