@@ -1201,9 +1201,10 @@ const api = {
 // ─── Init ────────────────────────────────────────────────────────────────────
 async function init() {
   try {
+    const paramWeek = new URLSearchParams(window.location.search).get('week');
     const result = await api.seedAuto();
 
-    if (result.needs_setup) {
+    if (result.needs_setup && !paramWeek) {
       state.setupWeek = result.week_start;
       state.currentWeek = result.week_start;
       showLoading(false);
@@ -1211,8 +1212,7 @@ async function init() {
       updateWeekLabel();
       openOfficeDayModal(false);
     } else {
-      state.currentWeek = result.week_start;
-      await loadWeek(state.currentWeek);
+      await loadWeek(paramWeek || result.week_start);
       showLoading(false);
       showApp(true);
     }
@@ -1228,6 +1228,7 @@ async function loadWeek(weekISO) {
   state.currentWeek = weekISO;
   state.expandedId = null;
   updateWeekLabel();
+  history.replaceState(null, '', '?week=' + weekISO);
 
   const data = await api.getSessions(weekISO);
 
