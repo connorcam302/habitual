@@ -25,6 +25,7 @@ services:
     environment:
       DATABASE_URL: postgresql://habitual:habitual@db:5432/habitual
       PORT: 8001
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     depends_on:
       db:
         condition: service_healthy

@@ -16,11 +16,13 @@ export default function WeekView({ currentWeek, sessions, officeDays, onUpdateSe
   const today = todayDayName()
   const isCurrentWeek = currentWeek === currentMondayISO()
 
-  const grouped = sessions.reduce<Record<string, Session[]>>((acc, s) => {
-    if (!acc[s.day]) acc[s.day] = []
-    acc[s.day].push(s)
-    return acc
-  }, {})
+  const grouped = sessions
+    .filter(s => s.status !== 'cancelled')
+    .reduce<Record<string, Session[]>>((acc, s) => {
+      if (!acc[s.day]) acc[s.day] = []
+      acc[s.day].push(s)
+      return acc
+    }, {})
 
   return (
     <div

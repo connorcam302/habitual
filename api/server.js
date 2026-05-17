@@ -166,6 +166,9 @@ async function getSessionsForWeek(weekId) {
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
+const createAIRouter = require('./ai');
+app.use('/api/ai', createAIRouter(pool));
+
 // GET /api/sessions?week=YYYY-MM-DD
 app.get('/api/sessions', async (req, res) => {
   try {
@@ -268,6 +271,19 @@ app.patch('/api/sessions/:id', async (req, res) => {
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Session not found' });
     res.json({ session: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/weeks?week=YYYY-MM-DD
+app.delete('/api/weeks', async (req, res) => {
+  try {
+    const { week } = req.query;
+    if (!week) return res.status(400).json({ error: 'week parameter required' });
+    const result = await pool.query('DELETE FROM weeks WHERE week_start = $1 RETURNING id', [week]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Week not found' });
+    res.json({ message: 'Week deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

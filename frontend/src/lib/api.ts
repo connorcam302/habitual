@@ -39,6 +39,9 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  deleteWeek: (week: string) =>
+    req<{ message: string }>(`/api/weeks?week=${week}`, { method: 'DELETE' }),
+
   getWeeks: () => req<{ weeks: Week[] }>('/api/weeks'),
 
   getStats: () => req<Stats>('/api/stats'),

@@ -30,7 +30,7 @@ export default function WeekSidebar({ sessions, officeDays }: Props) {
           <div className="text-[13px] text-text-dim">Week not tracked</div>
         ) : (
           TYPE_META.map(({ key, label, color }) => {
-            const all = sessions.filter(s => s.type === key)
+            const all = sessions.filter(s => s.type === key && s.status !== 'cancelled')
             if (all.length === 0) return null
             const done = all.filter(s => s.status === 'done').length
             const pct = Math.round((done / all.length) * 100)

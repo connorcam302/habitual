@@ -6,16 +6,20 @@ import LoadingScreen from './components/LoadingScreen'
 import Header from './components/Header'
 import WeekView from './components/WeekView'
 import HistoryView from './components/HistoryView'
+import AIAdjustModal from './components/AIAdjustModal'
 import OfficeDayModal from './components/OfficeDayModal'
+
+type View = 'week' | 'history'
 
 export default function App() {
   const [currentWeek, setCurrentWeek] = useState('')
   const [sessions, setSessions] = useState<Session[]>([])
   const [officeDays, setOfficeDays] = useState<string[]>([])
-  const [view, setView] = useState<'week' | 'history'>('week')
+  const [view, setView] = useState<View>('week')
   const [loading, setLoading] = useState(true)
   const [appError, setAppError] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
+  const [aiModalOpen, setAiModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [weeks, setWeeks] = useState<Week[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
@@ -29,8 +33,7 @@ export default function App() {
       setSessions([])
       setOfficeDays([])
       if (weekISO >= currentMondayISO()) {
-        setIsEditing(false)
-        setModalOpen(true)
+        setAiModalOpen(true)
       }
       return
     }
@@ -49,8 +52,7 @@ export default function App() {
         if (result.needs_setup && !paramWeek) {
           setCurrentWeek(result.week_start)
           setLoading(false)
-          setIsEditing(false)
-          setModalOpen(true)
+          setAiModalOpen(true)
         } else {
           await loadWeek(paramWeek ?? result.week_start)
           setLoading(false)
@@ -67,11 +69,6 @@ export default function App() {
     loadWeek(addWeeks(currentWeek, direction))
   }
 
-  const openEditModal = () => {
-    setIsEditing(true)
-    setModalOpen(true)
-  }
-
   const updateSession = (updated: Session) => {
     setSessions(prev => prev.map(s => s.id === updated.id ? updated : s))
   }
@@ -82,7 +79,7 @@ export default function App() {
     setStats(statsData)
   }, [])
 
-  const handleSwitchView = (v: 'week' | 'history') => {
+  const handleSwitchView = (v: View) => {
     setView(v)
     if (v === 'history') loadHistory()
   }
@@ -90,6 +87,21 @@ export default function App() {
   const handleRescheduled = (newSessions: Session[], newOfficeDays: string[]) => {
     setSessions(newSessions)
     setOfficeDays(newOfficeDays)
+  }
+
+  const handleDeleteWeek = async () => {
+    try {
+      await api.deleteWeek(currentWeek)
+      setSessions([])
+      setOfficeDays([])
+    } catch {
+      // week may already be gone — state is fine
+    }
+  }
+
+  const handleAIApplied = (newSessions: Session[], newOfficeDays?: string[]) => {
+    setSessions(newSessions)
+    if (newOfficeDays !== undefined) setOfficeDays(newOfficeDays)
   }
 
   const headerHeight = 'calc(var(--safe-top) + 130px)'
@@ -104,23 +116,25 @@ export default function App() {
         view={view}
         onNavigateWeek={navigateWeek}
         onSwitchView={handleSwitchView}
-        onOpenEditModal={openEditModal}
+        onOpenEditModal={() => { setIsEditing(true); setModalOpen(true) }}
+        onOpenAIModal={() => setAiModalOpen(true)}
+        onDeleteWeek={handleDeleteWeek}
+        weekExists={sessions.length > 0}
       />
 
-      {/* Main scrollable content */}
+      {/* Main content area */}
       <main
-        className="flex-1 overflow-y-auto md:max-w-[1080px] md:mx-auto md:w-full"
+        className="flex-1 md:max-w-[1080px] md:mx-auto md:w-full"
         style={{
           paddingTop: headerHeight,
           paddingBottom: `calc(72px + var(--safe-bottom))`,
+          overflow: 'auto',
         }}
       >
         {appError ? (
           <div className="text-center py-16 px-6 text-text-muted">
             <div className="text-4xl mb-3">⚠️</div>
-            <div className="text-[15px]">
-              Could not connect to server.<br />Check your connection and reload.
-            </div>
+            <div className="text-[15px]">Could not connect to server.<br />Check your connection and reload.</div>
           </div>
         ) : view === 'week' ? (
           <WeekView
@@ -140,18 +154,8 @@ export default function App() {
           bg-surface border-t border-app-border flex md:hidden"
         style={{ paddingBottom: 'var(--safe-bottom)' }}
       >
-        <TabBtn
-          active={view === 'week'}
-          icon="📅"
-          label="This Week"
-          onClick={() => handleSwitchView('week')}
-        />
-        <TabBtn
-          active={view === 'history'}
-          icon="📊"
-          label="All Time"
-          onClick={() => handleSwitchView('history')}
-        />
+        <TabBtn active={view === 'week'}    icon="📅" label="This Week" onClick={() => handleSwitchView('week')} />
+        <TabBtn active={view === 'history'} icon="📊" label="All Time"  onClick={() => handleSwitchView('history')} />
       </div>
 
       <OfficeDayModal
@@ -163,17 +167,24 @@ export default function App() {
         onLoadWeek={loadWeek}
         onRescheduled={handleRescheduled}
       />
+
+      <AIAdjustModal
+        open={aiModalOpen}
+        onClose={() => {
+          setAiModalOpen(false)
+          // If new week setup was dismissed without applying, stay on week view
+        }}
+        currentWeek={currentWeek}
+        sessions={sessions}
+        officeDays={officeDays}
+        onApplied={handleAIApplied}
+      />
     </div>
   )
 }
 
-function TabBtn({
-  active, icon, label, onClick,
-}: {
-  active: boolean
-  icon: string
-  label: string
-  onClick: () => void
+function TabBtn({ active, icon, label, onClick }: {
+  active: boolean; icon: string; label: string; onClick: () => void
 }) {
   return (
     <button
