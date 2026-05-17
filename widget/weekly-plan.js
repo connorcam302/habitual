@@ -3,7 +3,7 @@
 //
 // Setup: set BASE_URL to your server address below.
 
-const BASE_URL = "http://YOUR-SERVER:8001";
+const BASE_URL = "http://localhost:8001";
 
 // ─── Colours ─────────────────────────────────────────────────────────────────
 const TYPE_COLORS = {
@@ -30,7 +30,10 @@ function getMonday(date) {
 }
 
 function formatISO(date) {
-  return date.toISOString().split("T")[0];
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function getDayName(date) {
@@ -60,6 +63,10 @@ async function run() {
     const req = new Request(`${BASE_URL}/api/sessions?week=${weekStart}`);
     req.timeoutInterval = 10;
     const data = await req.loadJSON();
+
+    if (data.week_exists === false) {
+      throw new Error(`Week ${weekStart} not set up — open the app`);
+    }
     const sessions = data.sessions || [];
 
     const todaySessions = sessions.filter((s) => s.day === today);
@@ -154,7 +161,7 @@ async function run() {
           !s.time_slot.includes("work")
         ) {
           const time = row.addText(s.time_slot.split("–")[0].trim());
-          time.font = Font.monospacedSystemFont(10);
+          time.font = Font.regularMonospacedSystemFont(10);
           time.textColor = DIM_COLOR;
         }
 
@@ -172,7 +179,7 @@ async function run() {
     // ── Done count ───────────────────────────────────────────────────────────
     widget.addSpacer();
     const footer = widget.addText(`${done} of ${total} this week`);
-    footer.font = Font.monospacedSystemFont(10);
+    footer.font = Font.regularMonospacedSystemFont(10);
     footer.textColor = DIM_COLOR;
   } catch (e) {
     const errText = widget.addText("Could not load data");
@@ -180,9 +187,16 @@ async function run() {
     errText.font = Font.systemFont(12);
 
     widget.addSpacer(4);
-    const hint = widget.addText("Check BASE_URL in script");
-    hint.textColor = MUTED_COLOR;
-    hint.font = Font.systemFont(10);
+    const detail = widget.addText(String(e && e.message ? e.message : e));
+    detail.textColor = MUTED_COLOR;
+    detail.font = Font.systemFont(9);
+    detail.lineLimit = 3;
+
+    widget.addSpacer(4);
+    const hint = widget.addText(BASE_URL);
+    hint.textColor = DIM_COLOR;
+    hint.font = Font.systemFont(8);
+    hint.lineLimit = 1;
   }
 
   if (config.runsInWidget) {
