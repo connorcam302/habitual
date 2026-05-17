@@ -10,7 +10,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'frontend')));
+app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
 
 // ─── Session templates ───────────────────────────────────────────────────────
 // Each session has a wfh_slot (WFH day time) and office_slot (office day time).
@@ -433,12 +433,12 @@ app.post('/api/reschedule-apply', async (req, res) => {
   }
 });
 
-// Widget script (served so the browser preview can fetch it same-origin)
+// Widget script
 app.use('/widget', express.static(path.join(__dirname, 'widget')));
 
-// Catch-all — serve the SPA
+// SPA fallback
 app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+  res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
 });
 
 app.listen(PORT, () => console.log(`Habitual listening on :${PORT}`));

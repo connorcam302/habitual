@@ -1,0 +1,190 @@
+import { useState, useEffect, useCallback } from 'react'
+import type { Session, Week, Stats } from './types'
+import { api } from './lib/api'
+import { currentMondayISO, addWeeks } from './lib/utils'
+import LoadingScreen from './components/LoadingScreen'
+import Header from './components/Header'
+import WeekView from './components/WeekView'
+import HistoryView from './components/HistoryView'
+import OfficeDayModal from './components/OfficeDayModal'
+
+export default function App() {
+  const [currentWeek, setCurrentWeek] = useState('')
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [officeDays, setOfficeDays] = useState<string[]>([])
+  const [view, setView] = useState<'week' | 'history'>('week')
+  const [loading, setLoading] = useState(true)
+  const [appError, setAppError] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [weeks, setWeeks] = useState<Week[]>([])
+  const [stats, setStats] = useState<Stats | null>(null)
+
+  const loadWeek = useCallback(async (weekISO: string) => {
+    setCurrentWeek(weekISO)
+    history.replaceState(null, '', '?week=' + weekISO)
+
+    const data = await api.getSessions(weekISO)
+    if (!data.week_exists) {
+      setSessions([])
+      setOfficeDays([])
+      if (weekISO >= currentMondayISO()) {
+        setIsEditing(false)
+        setModalOpen(true)
+      }
+      return
+    }
+
+    setSessions(data.sessions)
+    const odData = await api.getOfficeDays(weekISO)
+    setOfficeDays(odData.office_days ?? [])
+  }, [])
+
+  useEffect(() => {
+    async function init() {
+      try {
+        const paramWeek = new URLSearchParams(window.location.search).get('week')
+        const result = await api.seedAuto()
+
+        if (result.needs_setup && !paramWeek) {
+          setCurrentWeek(result.week_start)
+          setLoading(false)
+          setIsEditing(false)
+          setModalOpen(true)
+        } else {
+          await loadWeek(paramWeek ?? result.week_start)
+          setLoading(false)
+        }
+      } catch {
+        setLoading(false)
+        setAppError(true)
+      }
+    }
+    init()
+  }, [loadWeek])
+
+  const navigateWeek = (direction: number) => {
+    loadWeek(addWeeks(currentWeek, direction))
+  }
+
+  const openEditModal = () => {
+    setIsEditing(true)
+    setModalOpen(true)
+  }
+
+  const updateSession = (updated: Session) => {
+    setSessions(prev => prev.map(s => s.id === updated.id ? updated : s))
+  }
+
+  const loadHistory = useCallback(async () => {
+    const [weeksData, statsData] = await Promise.all([api.getWeeks(), api.getStats()])
+    setWeeks(weeksData.weeks ?? [])
+    setStats(statsData)
+  }, [])
+
+  const handleSwitchView = (v: 'week' | 'history') => {
+    setView(v)
+    if (v === 'history') loadHistory()
+  }
+
+  const handleRescheduled = (newSessions: Session[], newOfficeDays: string[]) => {
+    setSessions(newSessions)
+    setOfficeDays(newOfficeDays)
+  }
+
+  const headerHeight = 'calc(var(--safe-top) + 130px)'
+
+  if (loading) return <LoadingScreen />
+
+  return (
+    <div className="flex flex-col h-full">
+      <Header
+        currentWeek={currentWeek}
+        sessions={sessions}
+        view={view}
+        onNavigateWeek={navigateWeek}
+        onSwitchView={handleSwitchView}
+        onOpenEditModal={openEditModal}
+      />
+
+      {/* Main scrollable content */}
+      <main
+        className="flex-1 overflow-y-auto md:max-w-[1080px] md:mx-auto md:w-full"
+        style={{
+          paddingTop: headerHeight,
+          paddingBottom: `calc(72px + var(--safe-bottom))`,
+        }}
+      >
+        {appError ? (
+          <div className="text-center py-16 px-6 text-text-muted">
+            <div className="text-4xl mb-3">⚠️</div>
+            <div className="text-[15px]">
+              Could not connect to server.<br />Check your connection and reload.
+            </div>
+          </div>
+        ) : view === 'week' ? (
+          <WeekView
+            currentWeek={currentWeek}
+            sessions={sessions}
+            officeDays={officeDays}
+            onUpdateSession={updateSession}
+          />
+        ) : (
+          <HistoryView weeks={weeks} stats={stats} />
+        )}
+      </main>
+
+      {/* Bottom tab bar — mobile only */}
+      <div
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-50
+          bg-surface border-t border-app-border flex md:hidden"
+        style={{ paddingBottom: 'var(--safe-bottom)' }}
+      >
+        <TabBtn
+          active={view === 'week'}
+          icon="📅"
+          label="This Week"
+          onClick={() => handleSwitchView('week')}
+        />
+        <TabBtn
+          active={view === 'history'}
+          icon="📊"
+          label="All Time"
+          onClick={() => handleSwitchView('history')}
+        />
+      </div>
+
+      <OfficeDayModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        isEditing={isEditing}
+        currentWeek={currentWeek}
+        currentOfficeDays={officeDays}
+        onLoadWeek={loadWeek}
+        onRescheduled={handleRescheduled}
+      />
+    </div>
+  )
+}
+
+function TabBtn({
+  active, icon, label, onClick,
+}: {
+  active: boolean
+  icon: string
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-1
+        bg-transparent border-none cursor-pointer text-[11px] font-semibold font-display
+        transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-football
+        ${active ? 'text-football' : 'text-text-dim hover:text-text-muted'}`}
+    >
+      <span className="text-[20px] leading-none">{icon}</span>
+      <span>{label}</span>
+    </button>
+  )
+}
