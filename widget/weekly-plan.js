@@ -3,7 +3,7 @@
 //
 // Setup: set BASE_URL to your server address below.
 
-const BASE_URL = "http://YOUR-SERVER:8001";
+const BASE_URL = "https://habitual.connorcampbell.dev";
 
 // ─── Colours ─────────────────────────────────────────────────────────────────
 const TYPE_COLORS = {
@@ -180,9 +180,16 @@ async function run() {
     errText.font = Font.systemFont(12);
 
     widget.addSpacer(4);
-    const hint = widget.addText("Check BASE_URL in script");
-    hint.textColor = MUTED_COLOR;
-    hint.font = Font.systemFont(10);
+    const detail = widget.addText(String(e && e.message ? e.message : e));
+    detail.textColor = MUTED_COLOR;
+    detail.font = Font.systemFont(9);
+    detail.lineLimit = 3;
+
+    widget.addSpacer(4);
+    const hint = widget.addText(BASE_URL);
+    hint.textColor = DIM_COLOR;
+    hint.font = Font.systemFont(8);
+    hint.lineLimit = 1;
   }
 
   if (config.runsInWidget) {
