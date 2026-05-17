@@ -138,11 +138,18 @@ const DAY_ORDER_SQL = `CASE day
 
 module.exports = function createAIRouter(pool) {
   const router = require('express').Router();
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  function getAnthropic() {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY is not configured');
+    }
+    return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  }
 
   // POST /api/ai/chat
   router.post('/chat', async (req, res) => {
     try {
+      const anthropic = getAnthropic();
       const { messages, week_start, sessions, office_days } = req.body;
 
       const sessionList = (sessions ?? [])
