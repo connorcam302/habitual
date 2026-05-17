@@ -30,7 +30,10 @@ function getMonday(date) {
 }
 
 function formatISO(date) {
-  return date.toISOString().split("T")[0];
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function getDayName(date) {
@@ -60,6 +63,10 @@ async function run() {
     const req = new Request(`${BASE_URL}/api/sessions?week=${weekStart}`);
     req.timeoutInterval = 10;
     const data = await req.loadJSON();
+
+    if (data.week_exists === false) {
+      throw new Error(`Week ${weekStart} not set up — open the app`);
+    }
     const sessions = data.sessions || [];
 
     const todaySessions = sessions.filter((s) => s.day === today);
