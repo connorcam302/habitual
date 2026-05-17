@@ -3,7 +3,7 @@
 //
 // Setup: set BASE_URL to your server address below.
 
-const BASE_URL = "https://habitual.connorcampbell.dev";
+const BASE_URL = "http://localhost:8001";
 
 // ─── Colours ─────────────────────────────────────────────────────────────────
 const TYPE_COLORS = {
