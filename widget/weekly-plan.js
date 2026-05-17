@@ -161,7 +161,7 @@ async function run() {
           !s.time_slot.includes("work")
         ) {
           const time = row.addText(s.time_slot.split("–")[0].trim());
-          time.font = Font.monospacedSystemFont(10);
+          time.font = Font.regularMonospacedSystemFont(10);
           time.textColor = DIM_COLOR;
         }
 
@@ -179,7 +179,7 @@ async function run() {
     // ── Done count ───────────────────────────────────────────────────────────
     widget.addSpacer();
     const footer = widget.addText(`${done} of ${total} this week`);
-    footer.font = Font.monospacedSystemFont(10);
+    footer.font = Font.regularMonospacedSystemFont(10);
     footer.textColor = DIM_COLOR;
   } catch (e) {
     const errText = widget.addText("Could not load data");
