@@ -20,14 +20,14 @@ interface Props {
 
 export default function WeekSidebar({ sessions, officeDays }: Props) {
   return (
-    <aside className="hidden md:block sticky top-[90px]">
+    <aside className="hidden md:block sticky" style={{ top: 'var(--header-h)' }}>
       {/* By type */}
       <div className="bg-surface border border-app-border rounded-[14px] p-4 mb-3">
         <div className="font-mono text-[10px] tracking-[0.1em] text-text-dim uppercase mb-3.5">
           By type
         </div>
         {sessions.length === 0 ? (
-          <div className="text-[13px] text-text-dim">Week not tracked</div>
+          <div className="text-sm text-text-dim">Week not tracked</div>
         ) : (
           TYPE_META.map(({ key, label, color }) => {
             const all = sessions.filter(s => s.type === key && s.status !== 'cancelled')
@@ -38,13 +38,13 @@ export default function WeekSidebar({ sessions, officeDays }: Props) {
               <div key={key} className="mb-3 last:mb-0">
                 <div className="flex items-center gap-2 mb-1.5">
                   <div className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: color }} />
-                  <span className="text-[13px] font-medium text-app-text flex-1">{label}</span>
+                  <span className="text-sm font-medium text-app-text flex-1">{label}</span>
                   <span className="font-mono text-[11px] text-text-muted">{done}/{all.length}</span>
                 </div>
                 <div className="h-[3px] bg-app-border rounded-sm overflow-hidden">
                   <div
-                    className="h-full rounded-sm transition-[width] duration-400"
-                    style={{ width: `${pct}%`, background: color }}
+                    className="h-full w-full rounded-sm transition-transform duration-[400ms]"
+                    style={{ background: color, transform: `translateX(-${100 - pct}%)` }}
                   />
                 </div>
               </div>

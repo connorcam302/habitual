@@ -121,7 +121,7 @@ export default function OfficeDayModal({
                 <button
                   key={day}
                   onClick={() => toggleDay(day)}
-                  className="flex-1 py-3 px-1 rounded-xl text-[13px] font-semibold font-display text-center
+                  className="flex-1 py-3 px-1 rounded-xl text-sm font-semibold font-display text-center
                     border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-football"
                   style={selected.includes(day) ? {
                     borderColor: 'var(--football)',
@@ -139,7 +139,7 @@ export default function OfficeDayModal({
             </div>
 
             {/* Note */}
-            <div className="text-[12px] text-text-dim px-3 py-2.5 bg-surface-3 border border-app-border rounded-[10px] mb-5">
+            <div className="text-xs text-text-dim px-3 py-2.5 bg-surface-3 border border-app-border rounded-[10px] mb-5">
               Pimsleur commute sessions appear on office days (Wed, Thu, Fri).
               Exercise sessions shift to evenings when you're in the office.
             </div>
@@ -203,7 +203,7 @@ function DiffItem({ change: c }: { change: DiffChange }) {
         {badgeStyle.label}
       </span>
       <div className="flex-1 min-w-0">
-        <div className="text-[13px] font-semibold text-app-text mb-0.5">{c.name}</div>
+        <div className="text-sm font-semibold text-app-text mb-0.5">{c.name}</div>
         <div className="font-mono text-[10px] tracking-[0.08em] uppercase text-text-dim mb-1">
           {DAY_LONG[c.day] ?? c.day}
         </div>

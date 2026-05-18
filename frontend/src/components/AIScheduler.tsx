@@ -201,7 +201,7 @@ export default function AIScheduler({ currentWeek, sessions, officeDays, onAppli
             <button
               key={day}
               onClick={() => toggleDay(day)}
-              className="flex-1 py-3 rounded-xl text-[13px] font-semibold font-display text-center
+              className="flex-1 py-3 rounded-xl text-sm font-semibold font-display text-center
                 border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-football"
               style={selectedDays.includes(day) ? {
                 borderColor: 'var(--football)',
@@ -244,10 +244,10 @@ export default function AIScheduler({ currentWeek, sessions, officeDays, onAppli
               key={type}
               onClick={() => addEvent(type)}
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl
-                border border-dashed border-app-border text-[12px] font-semibold font-display
+                border border-dashed border-app-border text-xs font-semibold font-display
                 text-text-dim hover:border-text-muted hover:text-text-muted transition-colors"
             >
-              <span className="text-[14px] leading-none">{icon}</span>
+              <span className="text-sm leading-none">{icon}</span>
               {label}
             </button>
           ))}
@@ -261,7 +261,7 @@ export default function AIScheduler({ currentWeek, sessions, officeDays, onAppli
           onChange={e => setNotes(e.target.value)}
           placeholder="Anything else Claude should know…"
           rows={2}
-          className="w-full resize-none rounded-xl px-3 py-2.5 text-[14px] font-display
+          className="w-full resize-none rounded-xl px-3 py-2.5 text-sm font-display
             bg-surface-2 border border-app-border text-app-text
             placeholder:text-text-dim outline-none transition-colors
             focus:border-[color-mix(in_oklch,var(--football)_30%,transparent)]"
@@ -272,7 +272,7 @@ export default function AIScheduler({ currentWeek, sessions, officeDays, onAppli
       <button
         onClick={propose}
         disabled={loading || !hasContent}
-        className="w-full py-4 rounded-[14px] text-white text-[16px] font-bold font-display
+        className="w-full py-4 rounded-[14px] text-white text-base font-bold font-display
           disabled:opacity-40 transition-opacity hover:opacity-90"
         style={{ background: 'var(--gradient-cta)' }}
       >
@@ -280,12 +280,12 @@ export default function AIScheduler({ currentWeek, sessions, officeDays, onAppli
       </button>
 
       {error && (
-        <p className="text-[13px] text-center" style={{ color: 'var(--cancelled)' }}>{error}</p>
+        <p className="text-sm text-center" style={{ color: 'var(--cancelled)' }}>{error}</p>
       )}
 
       {/* ── Applied confirmation ── */}
       {applied && (
-        <div className="rounded-xl border border-app-border px-4 py-3 text-[13px] text-text-muted text-center"
+        <div className="rounded-xl border border-app-border px-4 py-3 text-sm text-text-muted text-center"
           style={{ background: 'color-mix(in oklch, var(--done) 6%, transparent)', borderColor: 'color-mix(in oklch, var(--done) 20%, transparent)' }}>
           ✓ Schedule updated
         </div>
@@ -295,7 +295,7 @@ export default function AIScheduler({ currentWeek, sessions, officeDays, onAppli
       {proposal && !applied && (
         <div className="space-y-3">
           {proposalMessage && (
-            <p className="text-[13px] text-text-muted leading-relaxed">{proposalMessage}</p>
+            <p className="text-sm text-text-muted leading-relaxed">{proposalMessage}</p>
           )}
           <ProposalCard
             proposal={proposal}
@@ -334,7 +334,7 @@ function EventCard({ event, sessions, onChange, onRemove }: {
   onRemove: () => void
 }) {
   const selectCls = `w-full bg-surface-2 border border-app-border rounded-lg px-3 py-2
-    text-[13px] font-display text-app-text outline-none
+    text-sm font-display text-app-text outline-none
     focus:border-[color-mix(in_oklch,var(--football)_30%,transparent)] transition-colors`
 
   return (
@@ -342,7 +342,7 @@ function EventCard({ event, sessions, onChange, onRemove }: {
       <button
         onClick={onRemove}
         className="absolute top-3 right-3 text-text-dim hover:text-text-muted transition-colors
-          text-[18px] leading-none focus-visible:outline-none"
+          text-lg leading-none focus-visible:outline-none"
         aria-label="Remove"
       >×</button>
 
@@ -408,7 +408,7 @@ function EventCard({ event, sessions, onChange, onRemove }: {
               onChange={e => onChange({ customText: e.target.value } as Partial<CancelEvent>)}
               placeholder="Describe what's cancelled…"
               className="w-full bg-surface-2 border border-app-border rounded-lg px-3 py-2
-                text-[13px] font-display text-app-text placeholder:text-text-dim outline-none
+                text-sm font-display text-app-text placeholder:text-text-dim outline-none
                 focus:border-[color-mix(in_oklch,var(--football)_30%,transparent)] transition-colors"
             />
           )}
@@ -426,7 +426,7 @@ function EventCard({ event, sessions, onChange, onRemove }: {
             onChange={e => onChange({ text: e.target.value } as Partial<ConstraintEvent>)}
             placeholder="e.g. Work dinner Wednesday evening"
             className="w-full bg-surface-2 border border-app-border rounded-lg px-3 py-2
-              text-[13px] font-display text-app-text placeholder:text-text-dim outline-none
+              text-sm font-display text-app-text placeholder:text-text-dim outline-none
               focus:border-[color-mix(in_oklch,var(--football)_30%,transparent)] transition-colors"
           />
         </div>
@@ -446,7 +446,7 @@ function ProposalCard({ proposal, applying, onApply, onDismiss }: {
         <div className="font-mono text-[10px] tracking-[0.1em] text-text-dim uppercase mb-1">
           Proposed changes
         </div>
-        <div className="text-[13px] text-app-text">{proposal.summary}</div>
+        <div className="text-sm text-app-text">{proposal.summary}</div>
       </div>
 
       {proposal.office_days !== undefined && (
@@ -476,7 +476,7 @@ function ProposalCard({ proposal, applying, onApply, onDismiss }: {
       {proposal.session_updates.map((u, i) => (
         <div key={i} className="flex items-start gap-3 px-4 py-2.5 border-b border-app-border last:border-b-0">
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-semibold text-app-text truncate">{u.name}</div>
+            <div className="text-sm font-semibold text-app-text truncate">{u.name}</div>
             <div className="font-mono text-[10px] tracking-[0.08em] text-text-dim uppercase">
               {DAY_SHORT[u.day] ?? u.day}
             </div>
@@ -506,7 +506,7 @@ function ProposalCard({ proposal, applying, onApply, onDismiss }: {
             Add
           </span>
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-semibold text-app-text truncate">{ns.name}</div>
+            <div className="text-sm font-semibold text-app-text truncate">{ns.name}</div>
             <div className="font-mono text-[10px] tracking-[0.08em] text-text-dim uppercase">
               {DAY_SHORT[ns.day] ?? ns.day}
               {ns.time_slot && <span className="ml-2 normal-case tracking-normal">{ns.time_slot}</span>}
@@ -517,14 +517,14 @@ function ProposalCard({ proposal, applying, onApply, onDismiss }: {
 
       <div className="flex gap-2 px-4 py-3 border-t border-app-border">
         <button onClick={onApply} disabled={applying}
-          className="flex-1 py-2 rounded-xl text-white text-[13px] font-semibold font-display
+          className="flex-1 py-2 rounded-xl text-white text-sm font-semibold font-display
             disabled:opacity-50 transition-opacity hover:opacity-90"
           style={{ background: 'var(--gradient-cta)' }}>
           {applying ? 'Applying…' : 'Apply changes'}
         </button>
         <button onClick={onDismiss} disabled={applying}
           className="px-4 py-2 rounded-xl border border-app-border text-text-muted
-            text-[13px] font-semibold font-display hover:border-[var(--text-muted)] hover:text-app-text transition-colors">
+            text-sm font-semibold font-display hover:border-[var(--text-muted)] hover:text-app-text transition-colors">
           Dismiss
         </button>
       </div>

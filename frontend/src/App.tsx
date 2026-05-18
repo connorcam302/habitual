@@ -1,13 +1,14 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
+import { CalendarDays, BarChart3 } from 'lucide-react'
 import type { Session, Week, Stats } from './types'
 import { api } from './lib/api'
 import { currentMondayISO, addWeeks } from './lib/utils'
 import LoadingScreen from './components/LoadingScreen'
 import Header from './components/Header'
 import WeekView from './components/WeekView'
-import HistoryView from './components/HistoryView'
 import AIAdjustModal from './components/AIAdjustModal'
-import OfficeDayModal from './components/OfficeDayModal'
+
+const HistoryView = lazy(() => import('./components/HistoryView'))
 
 type View = 'week' | 'history'
 
@@ -18,9 +19,7 @@ export default function App() {
   const [view, setView] = useState<View>('week')
   const [loading, setLoading] = useState(true)
   const [appError, setAppError] = useState(false)
-  const [modalOpen, setModalOpen] = useState(false)
   const [aiModalOpen, setAiModalOpen] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
   const [weeks, setWeeks] = useState<Week[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
 
@@ -84,11 +83,6 @@ export default function App() {
     if (v === 'history') loadHistory()
   }
 
-  const handleRescheduled = (newSessions: Session[], newOfficeDays: string[]) => {
-    setSessions(newSessions)
-    setOfficeDays(newOfficeDays)
-  }
-
   const handleDeleteWeek = async () => {
     try {
       await api.deleteWeek(currentWeek)
@@ -104,19 +98,19 @@ export default function App() {
     if (newOfficeDays !== undefined) setOfficeDays(newOfficeDays)
   }
 
-  const headerHeight = 'calc(var(--safe-top) + 130px)'
+  const headerHeight = 'calc(var(--safe-top) + 106px)'
+  const cssVars = { '--header-h': headerHeight } as React.CSSProperties
 
   if (loading) return <LoadingScreen />
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={cssVars}>
       <Header
         currentWeek={currentWeek}
         sessions={sessions}
         view={view}
         onNavigateWeek={navigateWeek}
         onSwitchView={handleSwitchView}
-        onOpenEditModal={() => { setIsEditing(true); setModalOpen(true) }}
         onOpenAIModal={() => setAiModalOpen(true)}
         onDeleteWeek={handleDeleteWeek}
         weekExists={sessions.length > 0}
@@ -134,7 +128,7 @@ export default function App() {
         {appError ? (
           <div className="text-center py-16 px-6 text-text-muted">
             <div className="text-4xl mb-3">⚠️</div>
-            <div className="text-[15px]">Could not connect to server.<br />Check your connection and reload.</div>
+            <div className="text-base">Could not connect to server.<br />Check your connection and reload.</div>
           </div>
         ) : view === 'week' ? (
           <WeekView
@@ -144,7 +138,9 @@ export default function App() {
             onUpdateSession={updateSession}
           />
         ) : (
-          <HistoryView weeks={weeks} stats={stats} />
+          <Suspense fallback={null}>
+            <HistoryView weeks={weeks} stats={stats} />
+          </Suspense>
         )}
       </main>
 
@@ -154,26 +150,13 @@ export default function App() {
           bg-surface border-t border-app-border flex md:hidden"
         style={{ paddingBottom: 'var(--safe-bottom)' }}
       >
-        <TabBtn active={view === 'week'}    icon="📅" label="This Week" onClick={() => handleSwitchView('week')} />
-        <TabBtn active={view === 'history'} icon="📊" label="All Time"  onClick={() => handleSwitchView('history')} />
+        <TabBtn active={view === 'week'}    icon={<CalendarDays size={20} />} label="This Week" onClick={() => handleSwitchView('week')} />
+        <TabBtn active={view === 'history'} icon={<BarChart3    size={20} />} label="All Time"  onClick={() => handleSwitchView('history')} />
       </div>
-
-      <OfficeDayModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        isEditing={isEditing}
-        currentWeek={currentWeek}
-        currentOfficeDays={officeDays}
-        onLoadWeek={loadWeek}
-        onRescheduled={handleRescheduled}
-      />
 
       <AIAdjustModal
         open={aiModalOpen}
-        onClose={() => {
-          setAiModalOpen(false)
-          // If new week setup was dismissed without applying, stay on week view
-        }}
+        onClose={() => setAiModalOpen(false)}
         currentWeek={currentWeek}
         sessions={sessions}
         officeDays={officeDays}
@@ -184,7 +167,7 @@ export default function App() {
 }
 
 function TabBtn({ active, icon, label, onClick }: {
-  active: boolean; icon: string; label: string; onClick: () => void
+  active: boolean; icon: React.ReactNode; label: string; onClick: () => void
 }) {
   return (
     <button
@@ -194,7 +177,7 @@ function TabBtn({ active, icon, label, onClick }: {
         transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-football
         ${active ? 'text-football' : 'text-text-dim hover:text-text-muted'}`}
     >
-      <span className="text-[20px] leading-none">{icon}</span>
+      <span aria-hidden="true">{icon}</span>
       <span>{label}</span>
     </button>
   )

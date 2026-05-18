@@ -15,7 +15,7 @@ const buttonVariants = cva(
       },
       size: {
         default: 'px-4 py-4 text-base',
-        sm: 'px-5 py-4 text-[15px]',
+        sm: 'px-5 py-4 text-base',
         icon: 'w-[30px] h-[30px] rounded-full border-2 border-[var(--border)]',
       },
     },

@@ -2,6 +2,7 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 8001;
@@ -10,7 +11,10 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
+
+const distDir = path.join(__dirname, 'frontend', 'dist');
+const hasDist = fs.existsSync(distDir);
+if (hasDist) app.use(express.static(distDir));
 
 // ─── Session templates ───────────────────────────────────────────────────────
 // Each session has a wfh_slot (WFH day time) and office_slot (office day time).
@@ -452,9 +456,11 @@ app.post('/api/reschedule-apply', async (req, res) => {
 // Widget script
 app.use('/widget', express.static(path.join(__dirname, 'widget')));
 
-// SPA fallback
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
-});
+// SPA fallback — only in production where the build exists
+if (hasDist) {
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(distDir, 'index.html'));
+  });
+}
 
 app.listen(PORT, () => console.log(`Habitual listening on :${PORT}`));

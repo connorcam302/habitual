@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { Check } from 'lucide-react'
 import type { Session } from '@/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import SectionLabel from '@/components/ui/SectionLabel'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -179,14 +181,6 @@ function buildAdjustPrompt(
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-2">
-      {children}
-    </p>
-  )
-}
-
 function OfficeDayPicker({
   selected, onChange,
 }: {
@@ -202,7 +196,7 @@ function OfficeDayPicker({
         <button
           key={day}
           onClick={() => toggle(day)}
-          className="flex-1 py-3 px-1 rounded-[10px] text-[13px] font-semibold font-display text-center border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-football"
+          className="flex-1 py-3 px-1 rounded-[10px] text-sm font-semibold font-display text-center border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-football"
           style={selected.includes(day) ? {
             borderColor: 'var(--football)',
             background: 'color-mix(in oklch, var(--football) 9%, transparent)',
@@ -229,9 +223,10 @@ function InjuryFields({
   return (
     <div className="space-y-2.5">
       <select
+        aria-label="Injury body part"
         value={injury.bodyPart}
         onChange={e => onChange({ bodyPart: e.target.value })}
-        className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-[13px] text-app-text focus:outline-none focus:ring-1 focus:ring-football"
+        className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text focus:outline-none focus:ring-1 focus:ring-football"
       >
         {BODY_PARTS.map(b => (
           <option key={b.value} value={b.value}>{b.label}</option>
@@ -242,10 +237,11 @@ function InjuryFields({
         {SEVERITIES.map(sv => (
           <button
             key={sv.value}
+            aria-pressed={injury.severity === sv.value}
             onClick={() => onChange({ severity: sv.value })}
             className="flex-1 py-1.5 rounded-[8px] text-[11px] font-semibold border transition-colors"
             style={injury.severity === sv.value
-              ? { backgroundColor: 'var(--football)', borderColor: 'var(--football)', color: 'white' }
+              ? { backgroundColor: 'var(--football)', borderColor: 'var(--football)', color: '#fdf0d5' }
               : { background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
           >
             {sv.label}
@@ -258,7 +254,7 @@ function InjuryFields({
         placeholder="Notes (optional)"
         value={injury.notes}
         onChange={e => onChange({ notes: e.target.value })}
-        className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-[13px] text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
+        className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
       />
     </div>
   )
@@ -282,7 +278,7 @@ function ProposalView({
   return (
     <div className="space-y-4">
       {message && (
-        <p className="text-[13px] text-app-text leading-relaxed">{message}</p>
+        <p className="text-sm text-app-text leading-relaxed">{message}</p>
       )}
 
       {(updates.length > 0 || additions.length > 0) && (
@@ -292,7 +288,7 @@ function ProposalView({
             {updates.map(u => (
               <div key={u.session_id} className="flex items-center gap-3 px-3 py-2.5 bg-surface">
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-medium text-app-text truncate">{u.name}</div>
+                  <div className="text-sm font-medium text-app-text truncate">{u.name}</div>
                   <div className="text-[11px] text-text-muted capitalize">
                     {u.day}{u.time_slot ? ` · ${u.time_slot}` : ''}
                     {u.current_time && u.time_slot && u.current_time !== u.time_slot
@@ -312,7 +308,7 @@ function ProposalView({
             {additions.map((n, i) => (
               <div key={i} className="flex items-center gap-3 px-3 py-2.5 bg-surface">
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-medium text-app-text truncate">{n.name}</div>
+                  <div className="text-sm font-medium text-app-text truncate">{n.name}</div>
                   <div className="text-[11px] text-text-muted capitalize">
                     {n.day}{n.time_slot ? ` · ${n.time_slot}` : ''} · {n.type}
                   </div>
@@ -327,19 +323,19 @@ function ProposalView({
       )}
 
       {applyError && (
-        <p className="text-[12px]" style={{ color: 'var(--cancelled)' }}>{applyError}</p>
+        <p className="text-xs" style={{ color: 'var(--cancelled)' }}>{applyError}</p>
       )}
 
       <div className="flex gap-2 pt-1">
         <button
           onClick={onBack}
-          className="flex-1 py-2.5 rounded-[10px] text-[13px] font-semibold font-display border border-app-border bg-surface-2 text-app-text hover:bg-surface-3 transition-colors"
+          className="flex-1 py-2.5 rounded-[10px] text-sm font-semibold font-display border border-app-border bg-surface-2 text-app-text hover:bg-surface-3 transition-colors"
         >
           Back
         </button>
         <button
           onClick={onApply}
-          className="flex-1 py-2.5 rounded-[10px] text-[13px] font-semibold font-display text-white transition-opacity hover:opacity-90"
+          className="flex-1 py-2.5 rounded-[10px] text-sm font-semibold font-display text-app-text transition-opacity hover:opacity-90"
           style={{ backgroundColor: 'var(--football)' }}
         >
           {isNewWeek ? 'Start week' : 'Apply changes'}
@@ -369,6 +365,8 @@ function FootballSessionRow({
   return (
     <div>
       <button
+        aria-pressed={isAffected}
+        aria-label={`${session.name} — ${isAffected ? 'affected, tap to remove' : 'tap to mark as affected'}`}
         onClick={onToggle}
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[10px] border text-left transition-colors
           ${isAffected ? 'bg-surface-2 border-app-border' : 'bg-surface border-app-border hover:bg-surface-2'}`}
@@ -379,14 +377,10 @@ function FootballSessionRow({
             ? { backgroundColor: 'var(--football)', borderColor: 'var(--football)' }
             : { background: 'var(--surface-2)', borderColor: 'var(--border)' }}
         >
-          {isAffected && (
-            <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-              <path d="M1 3.5l2 2L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
+          {isAffected && <Check size={10} strokeWidth={2.5} color="white" />}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[13px] font-medium text-app-text truncate">{session.name}</div>
+          <div className="text-sm font-medium text-app-text truncate">{session.name}</div>
           <div className="text-[11px] text-text-muted">{session.time_slot ?? 'no time set'}</div>
         </div>
         {session.status !== 'pending' && (
@@ -402,12 +396,13 @@ function FootballSessionRow({
             {(['cancelled', 'injured'] as const).filter(t => t !== 'cancelled' || canCancel).map(t => (
               <button
                 key={t}
+                aria-pressed={info.type === t}
                 onClick={() => onUpdate({ type: t })}
                 className="px-3 py-1.5 rounded-full text-[11px] font-semibold capitalize border transition-colors"
                 style={info.type === t ? {
                   backgroundColor: t === 'injured' ? 'var(--injured)' : 'var(--cancelled)',
                   borderColor: t === 'injured' ? 'var(--injured)' : 'var(--cancelled)',
-                  color: 'white',
+                  color: '#fdf0d5',
                 } : { background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
               >
                 {t}
@@ -421,7 +416,7 @@ function FootballSessionRow({
               placeholder="Reason (optional)"
               value={info.reason}
               onChange={e => onUpdate({ reason: e.target.value })}
-              className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-[13px] text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
+              className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
             />
           ) : (
             <InjuryFields
@@ -595,7 +590,7 @@ export default function AIAdjustModal({
     <Dialog open={open} onOpenChange={v => { if (!v) handleClose() }}>
       <DialogContent className="max-w-lg p-0 gap-0 max-h-[88vh] flex flex-col">
         <DialogHeader className="px-5 pt-5 pb-4 shrink-0 border-b border-app-border">
-          <DialogTitle className="text-[15px] font-bold">{title}</DialogTitle>
+          <DialogTitle className="text-base font-bold">{title}</DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
@@ -604,12 +599,12 @@ export default function AIAdjustModal({
           {phase === 'applied' ? (
             <div className="text-center py-10 space-y-3">
               <div className="text-3xl">✓</div>
-              <div className="font-semibold text-[15px]">
+              <div className="font-semibold text-base">
                 {isNewWeek ? 'Week planned' : 'Schedule updated'}
               </div>
               <button
                 onClick={handleClose}
-                className="px-5 py-2 rounded-[10px] bg-surface-2 border border-app-border text-[13px] text-app-text hover:bg-surface-3 transition-colors"
+                className="px-5 py-2 rounded-[10px] bg-surface-2 border border-app-border text-sm text-app-text hover:bg-surface-3 transition-colors"
               >
                 Close
               </button>
@@ -617,7 +612,7 @@ export default function AIAdjustModal({
 
           /* ── Loading ── */
           ) : phase === 'loading' ? (
-            <div className="text-center py-10 text-text-muted text-[13px]">
+            <div className="text-center py-10 text-text-muted text-sm">
               {isNewWeek ? 'Planning your week…' : 'Planning adjustments…'}
             </div>
 
@@ -657,7 +652,7 @@ export default function AIAdjustModal({
                           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[10px] border border-app-border bg-surface text-left transition-colors hover:bg-surface-2"
                         >
                           <div className="flex-1 min-w-0">
-                            <div className={`text-[13px] font-medium transition-colors ${isCancelled ? 'text-text-dim line-through' : 'text-app-text'}`}>
+                            <div className={`text-sm font-medium transition-colors ${isCancelled ? 'text-text-dim line-through' : 'text-app-text'}`}>
                               {s.name}
                             </div>
                             <div className="text-[11px] text-text-dim">{s.time}</div>
@@ -682,7 +677,7 @@ export default function AIAdjustModal({
                               placeholder="Reason (optional)"
                               value={cancelledFootball[s.id]}
                               onChange={e => setCancelledFootball(prev => ({ ...prev, [s.id]: e.target.value }))}
-                              className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-[13px] text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
+                              className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
                             />
                           </div>
                         )}
@@ -702,7 +697,7 @@ export default function AIAdjustModal({
                     style={injury.active ? {
                       backgroundColor: 'var(--injured)',
                       borderColor: 'var(--injured)',
-                      color: 'white',
+                      color: '#fdf0d5',
                     } : {
                       background: 'var(--surface-2)',
                       borderColor: 'var(--border)',
@@ -728,13 +723,13 @@ export default function AIAdjustModal({
                   onChange={e => setNotes(e.target.value)}
                   placeholder="e.g. busy Tuesday evening, travelling Friday…"
                   rows={2}
-                  className="w-full px-3 py-2.5 rounded-[10px] bg-surface-2 border border-app-border text-[13px] text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football resize-none"
+                  className="w-full px-3 py-2.5 rounded-[10px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football resize-none"
                 />
               </div>
 
               <button
                 onClick={handlePropose}
-                className="w-full py-3 rounded-[10px] text-[13px] font-semibold font-display text-white hover:opacity-90 transition-opacity"
+                className="w-full py-3 rounded-[10px] text-sm font-semibold font-display text-app-text hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: 'var(--football)' }}
               >
                 Plan this week
@@ -754,7 +749,7 @@ export default function AIAdjustModal({
               <div>
                 <SectionLabel>Football sessions</SectionLabel>
                 {footballSessions.length === 0 ? (
-                  <p className="text-[13px] text-text-muted">No football sessions this week.</p>
+                  <p className="text-sm text-text-muted">No football sessions this week.</p>
                 ) : (
                   <div className="space-y-1.5">
                     {footballSessions.map(session => {
@@ -782,14 +777,14 @@ export default function AIAdjustModal({
                   onChange={e => setNotes(e.target.value)}
                   placeholder="Anything else affecting this week…"
                   rows={2}
-                  className="w-full px-3 py-2.5 rounded-[10px] bg-surface-2 border border-app-border text-[13px] text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football resize-none"
+                  className="w-full px-3 py-2.5 rounded-[10px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football resize-none"
                 />
               </div>
 
               <button
                 onClick={handlePropose}
                 disabled={!canProposeAdjust}
-                className="w-full py-3 rounded-[10px] text-[13px] font-semibold font-display text-white disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                className="w-full py-3 rounded-[10px] text-sm font-semibold font-display text-app-text disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: 'var(--football)' }}
               >
                 Propose changes

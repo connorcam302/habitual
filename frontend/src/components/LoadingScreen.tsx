@@ -10,7 +10,7 @@ export default function LoadingScreen() {
         <div className="loader-dot loader-dot-2 w-1.5 h-1.5 rounded-full bg-strength" />
         <div className="loader-dot loader-dot-3 w-1.5 h-1.5 rounded-full bg-chinese" />
       </div>
-      <div className="font-mono text-[13px] tracking-[0.25em] text-text-muted mt-4">
+      <div className="font-mono text-sm tracking-[0.25em] text-text-muted mt-4">
         HABITUAL
       </div>
     </div>

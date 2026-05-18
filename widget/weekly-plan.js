@@ -1,211 +1,259 @@
 // Habitual — Scriptable Widget
-// Shows today's sessions and weekly completion percentage.
-//
+// Shows today's sessions and weekly completion.
 // Setup: set BASE_URL to your server address below.
 
-const BASE_URL = "http://localhost:8001";
+const BASE_URL = "http://localhost:8001"
 
-// ─── Colours ─────────────────────────────────────────────────────────────────
-const TYPE_COLORS = {
-  football: "#3b82f6",
-  strength: "#a855f7",
-  speed: "#f97316",
-  cardio: "#22c55e",
-  chinese: "#06b6d4",
-};
-const STATUS_DONE_COLOR = "#22c55e";
-const BG_COLOR = new Color("#080810");
-const SURFACE_COLOR = new Color("#0f0f1c");
-const TEXT_COLOR = new Color("#eeeeff");
-const MUTED_COLOR = new Color("#6b7280");
-const DIM_COLOR = new Color("#374151");
+// ─── Palette ─────────────────────────────────────────────────────────────────
+// Warm-grey dark system, matches the web app.
+const C = {
+  bg:        new Color("#1a1918"),
+  surface:   new Color("#262523"),
+  track:     new Color("#3a3836"),
+  border:    new Color("#4f4d4a"),
+  text:      new Color("#fdf0d5"),
+  muted:     new Color("#a8a6a0"),
+  dim:       new Color("#857e78"),
+  done:      new Color("#48a870"),
+  injured:   new Color("#c99b32"),
+  cancelled: new Color("#b33d2a"),
+  skipped:   new Color("#979390"),
+  fill:      new Color("#c1121f"),  // progress fill — brick red
+}
+
+const TYPE_COLOR = {
+  football: new Color("#c1121f"),
+  strength: new Color("#f5ae22"),
+  speed:    new Color("#d97630"),
+  cardio:   new Color("#48a870"),
+  chinese:  new Color("#669bbc"),
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function getMonday(date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
-  d.setHours(0, 0, 0, 0);
-  return d;
+  const d = new Date(date)
+  const day = d.getDay()
+  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day))
+  d.setHours(0, 0, 0, 0)
+  return d
 }
 
 function formatISO(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
 }
 
 function getDayName(date) {
-  return [
-    "sunday",
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-  ][date.getDay()];
+  return ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"][date.getDay()]
+}
+
+// Draws a rounded progress bar at the correct proportional width using
+// DrawContext — avoids the fixed-pixel hack in the original.
+function drawProgressBar(pct, family) {
+  const contentWidths = { small: 127, medium: 301, large: 301 }
+  const w = contentWidths[family] ?? 127
+  const h = 4
+  const r = h / 2
+
+  const ctx = new DrawContext()
+  ctx.size = new Size(w, h)
+  ctx.opaque = false
+  ctx.respectScreenScale = true
+
+  // Track
+  ctx.setFillColor(C.track)
+  const trackPath = new Path()
+  trackPath.addRoundedRect(new Rect(0, 0, w, h), r, r)
+  ctx.addPath(trackPath)
+  ctx.fillPath()
+
+  // Fill
+  if (pct > 0) {
+    const fw = Math.max(h, Math.round(w * pct / 100))
+    ctx.setFillColor(pct >= 100 ? C.done : C.fill)
+    const fillPath = new Path()
+    fillPath.addRoundedRect(new Rect(0, 0, fw, h), r, r)
+    ctx.addPath(fillPath)
+    ctx.fillPath()
+  }
+
+  return ctx.getImage()
+}
+
+function statusMark(status) {
+  if (status === "done")      return { sym: "✓", color: C.done }
+  if (status === "injured")   return { sym: "!", color: C.injured }
+  if (status === "cancelled") return { sym: "✕", color: C.cancelled }
+  if (status === "skipped")   return { sym: "–", color: C.skipped }
+  return null
+}
+
+function formatTime(slot) {
+  if (!slot) return null
+  return slot.split("–")[0].trim().replace(/^0/, "")
 }
 
 // ─── Widget ──────────────────────────────────────────────────────────────────
 async function run() {
-  const widget = new ListWidget();
-  widget.backgroundColor = BG_COLOR;
-  widget.setPadding(14, 14, 14, 14);
-  widget.url = BASE_URL;
+  const widget = new ListWidget()
+  widget.backgroundColor = C.bg
+  widget.setPadding(14, 14, 14, 14)
+  widget.url = BASE_URL
+
+  const family = config.widgetFamily ?? "small"
 
   try {
-    const now = new Date();
-    const weekStart = formatISO(getMonday(now));
-    const today = getDayName(now);
+    const now       = new Date()
+    const weekStart = formatISO(getMonday(now))
+    const today     = getDayName(now)
 
-    const req = new Request(`${BASE_URL}/api/sessions?week=${weekStart}`);
-    req.timeoutInterval = 10;
-    const data = await req.loadJSON();
+    const req = new Request(`${BASE_URL}/api/sessions?week=${weekStart}`)
+    req.timeoutInterval = 10
+    const data = await req.loadJSON()
 
-    if (data.week_exists === false) {
-      throw new Error(`Week ${weekStart} not set up — open the app`);
+    if (!data.week_exists) {
+      throw new Error("Week not set up — open Habitual to plan")
     }
-    const sessions = data.sessions || [];
 
-    const todaySessions = sessions.filter((s) => s.day === today);
-    const done = sessions.filter((s) => s.status === "done").length;
-    const total = sessions.length;
-    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const sessions      = data.sessions ?? []
+    const todaySessions = sessions.filter(s => s.day === today)
+    const done          = sessions.filter(s => s.status === "done").length
+    const total         = sessions.length
+    const pct           = total > 0 ? Math.round((done / total) * 100) : 0
+    const allDone       = done > 0 && done === total
 
-    // ── Header row ──────────────────────────────────────────────────────────
-    const headerStack = widget.addStack();
-    headerStack.layoutHorizontally();
-    headerStack.centerAlignContent();
+    // ── Header ───────────────────────────────────────────────────────────────
+    const header = widget.addStack()
+    header.layoutHorizontally()
+    header.centerAlignContent()
 
-    const wordmark = headerStack.addText("HABITUAL");
-    wordmark.font = Font.boldMonospacedSystemFont(10);
-    wordmark.textColor = MUTED_COLOR;
+    const wordmark = header.addText("HABITUAL")
+    wordmark.font = Font.boldMonospacedSystemFont(9)
+    wordmark.textColor = C.dim
 
-    headerStack.addSpacer();
+    header.addSpacer()
 
-    const pctText = headerStack.addText(`${pct}%`);
-    pctText.font = Font.boldMonospacedSystemFont(11);
-    pctText.textColor = TEXT_COLOR;
+    const pctLabel = header.addText(`${pct}%`)
+    pctLabel.font = Font.boldMonospacedSystemFont(12)
+    pctLabel.textColor = allDone ? C.done : C.muted
 
-    widget.addSpacer(6);
+    widget.addSpacer(7)
 
-    // ── Mini progress bar ────────────────────────────────────────────────────
-    const barStack = widget.addStack();
-    barStack.layoutHorizontally();
-    barStack.size = new Size(0, 3);
+    // ── Progress bar ─────────────────────────────────────────────────────────
+    const barImg = widget.addImage(drawProgressBar(pct, family))
+    barImg.applyFittingContentMode()
 
-    const fillWidth = total > 0 ? Math.round((done / total) * 100) : 0;
-    // Scriptable doesn't have a native progress bar; simulate with stacks
-    if (fillWidth > 0) {
-      const fill = barStack.addStack();
-      fill.backgroundColor = new Color("#3b82f6");
-      fill.cornerRadius = 2;
-      fill.size = new Size(fillWidth, 3);
-    }
-    barStack.addSpacer();
-    const track = barStack.addStack();
-    track.backgroundColor = new Color("#2a2a45");
-    track.cornerRadius = 2;
-    track.size = new Size(100 - fillWidth, 3);
+    widget.addSpacer(11)
 
-    widget.addSpacer(10);
+    // ── Day + done count ─────────────────────────────────────────────────────
+    const dayRow = widget.addStack()
+    dayRow.layoutHorizontally()
+    dayRow.centerAlignContent()
 
-    // ── Today label ─────────────────────────────────────────────────────────
-    const dayLabel = widget.addText(today.toUpperCase());
-    dayLabel.font = Font.boldSystemFont(9);
-    dayLabel.textColor = MUTED_COLOR;
+    const dayLabel = dayRow.addText(today.toUpperCase())
+    dayLabel.font = Font.boldSystemFont(8)
+    dayLabel.textColor = C.dim
 
-    widget.addSpacer(5);
+    dayRow.addSpacer()
+
+    const countLabel = dayRow.addText(`${done} / ${total}`)
+    countLabel.font = Font.regularMonospacedSystemFont(8)
+    countLabel.textColor = allDone ? C.done : C.dim
+
+    widget.addSpacer(6)
 
     // ── Sessions ─────────────────────────────────────────────────────────────
     if (todaySessions.length === 0) {
-      const rest = widget.addText("Rest day ·");
-      rest.font = Font.systemFont(13);
-      rest.textColor = MUTED_COLOR;
+      const rest = widget.addText("Rest day")
+      rest.font = Font.mediumSystemFont(13)
+      rest.textColor = C.dim
     } else {
-      const limit = Math.min(
-        todaySessions.length,
-        config.widgetFamily === "large" ? 8 : 4,
-      );
-      for (let i = 0; i < limit; i++) {
-        const s = todaySessions[i];
-        const isDone = s.status === "done";
+      const limit = family === "large" ? 10 : family === "medium" ? 6 : 4
+      const shown = Math.min(todaySessions.length, limit)
 
-        const row = widget.addStack();
-        row.layoutHorizontally();
-        row.centerAlignContent();
-        row.spacing = 6;
+      for (let i = 0; i < shown; i++) {
+        const s      = todaySessions[i]
+        const mark   = statusMark(s.status)
+        const active = !mark
 
-        // Colour dot
-        const dot = row.addText("●");
-        dot.font = Font.systemFont(9);
-        dot.textColor = new Color(TYPE_COLORS[s.type] || "#444");
+        const row = widget.addStack()
+        row.layoutHorizontally()
+        row.centerAlignContent()
+        row.spacing = 7
 
-        // Session name
-        const name = row.addText(s.name);
-        name.font = Font.systemFont(12);
-        name.textColor = isDone ? MUTED_COLOR : TEXT_COLOR;
-        name.lineLimit = 1;
+        // Type dot
+        const dot = row.addText("●")
+        dot.font = Font.systemFont(7)
+        dot.textColor = TYPE_COLOR[s.type] ?? C.border
 
-        row.addSpacer();
+        // Name
+        const nameText = row.addText(s.name)
+        nameText.font = active ? Font.mediumSystemFont(12) : Font.systemFont(12)
+        nameText.textColor = active ? C.text : C.dim
+        nameText.lineLimit = 1
 
-        if (isDone) {
-          const check = row.addText("✓");
-          check.font = Font.boldSystemFont(11);
-          check.textColor = new Color(STATUS_DONE_COLOR);
-        } else if (
-          s.time_slot &&
-          !s.time_slot.includes("Commute") &&
-          !s.time_slot.includes("work")
-        ) {
-          const time = row.addText(s.time_slot.split("–")[0].trim());
-          time.font = Font.regularMonospacedSystemFont(10);
-          time.textColor = DIM_COLOR;
+        row.addSpacer()
+
+        // Status mark or scheduled time
+        if (mark) {
+          const sym = row.addText(mark.sym)
+          sym.font = Font.boldSystemFont(11)
+          sym.textColor = mark.color
+        } else {
+          const t = formatTime(s.time_slot)
+          if (t) {
+            const timeText = row.addText(t)
+            timeText.font = Font.regularMonospacedSystemFont(9)
+            timeText.textColor = C.dim
+          }
         }
 
-        if (i < limit - 1) widget.addSpacer(3);
+        if (i < shown - 1) widget.addSpacer(4)
       }
 
       if (todaySessions.length > limit) {
-        widget.addSpacer(2);
-        const more = widget.addText(`+${todaySessions.length - limit} more`);
-        more.font = Font.systemFont(11);
-        more.textColor = MUTED_COLOR;
+        widget.addSpacer(3)
+        const more = widget.addText(`+${todaySessions.length - limit} more`)
+        more.font = Font.systemFont(10)
+        more.textColor = C.dim
       }
     }
 
-    // ── Done count ───────────────────────────────────────────────────────────
-    widget.addSpacer();
-    const footer = widget.addText(`${done} of ${total} this week`);
-    footer.font = Font.regularMonospacedSystemFont(10);
-    footer.textColor = DIM_COLOR;
+    widget.addSpacer()
+
   } catch (e) {
-    const errText = widget.addText("Could not load data");
-    errText.textColor = new Color("#ef4444");
-    errText.font = Font.systemFont(12);
+    widget.addSpacer()
 
-    widget.addSpacer(4);
-    const detail = widget.addText(String(e && e.message ? e.message : e));
-    detail.textColor = MUTED_COLOR;
-    detail.font = Font.systemFont(9);
-    detail.lineLimit = 3;
+    const errText = widget.addText("⚠ Could not load")
+    errText.textColor = C.cancelled
+    errText.font = Font.mediumSystemFont(12)
 
-    widget.addSpacer(4);
-    const hint = widget.addText(BASE_URL);
-    hint.textColor = DIM_COLOR;
-    hint.font = Font.systemFont(8);
-    hint.lineLimit = 1;
+    widget.addSpacer(5)
+
+    const detail = widget.addText(String(e?.message ?? e))
+    detail.textColor = C.muted
+    detail.font = Font.systemFont(10)
+    detail.lineLimit = 3
+
+    widget.addSpacer(5)
+
+    const hint = widget.addText(BASE_URL)
+    hint.textColor = C.dim
+    hint.font = Font.regularMonospacedSystemFont(8)
+    hint.lineLimit = 1
+
+    widget.addSpacer()
   }
 
   if (config.runsInWidget) {
-    Script.setWidget(widget);
+    Script.setWidget(widget)
   } else {
-    widget.presentSmall();
+    widget.presentSmall()
   }
 
-  Script.complete();
+  Script.complete()
 }
 
-run();
+run()

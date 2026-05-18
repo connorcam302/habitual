@@ -15,7 +15,7 @@ const DialogOverlay = React.forwardRef<
     ref={ref}
     className={cn(
       'fixed inset-0 z-50 flex items-end pb-[var(--safe-bottom)] md:items-center',
-      'bg-[rgba(8,8,16,0.85)] backdrop-blur-[6px]',
+      'bg-[rgba(0,9,14,0.85)] backdrop-blur-[6px]',
       'data-[state=open]:animate-in data-[state=closed]:animate-out',
       'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
       className,

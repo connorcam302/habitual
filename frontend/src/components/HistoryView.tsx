@@ -9,6 +9,13 @@ function toInt(v: string | number | undefined): number {
   return parseInt(String(v ?? 0), 10) || 0
 }
 
+function completionColor(pct: number): string {
+  if (pct >= 80) return 'var(--done)'
+  if (pct >= 50) return 'var(--strength)'
+  if (pct > 0)   return 'var(--football)'
+  return 'var(--text-muted)'
+}
+
 export default function HistoryView({ weeks, stats }: Props) {
   if (!stats) {
     return (
@@ -31,7 +38,7 @@ export default function HistoryView({ weeks, stats }: Props) {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-2.5 px-4 pb-4 md:grid-cols-4 md:px-6">
-        <StatCard value={`${stats.completion_rate}%`} label="Completion rate" />
+        <StatCard value={`${stats.completion_rate}%`} label="Completion rate" valueColor={completionColor(stats.completion_rate)} />
         <StatCard value={String(stats.weeks_tracked)} label="Weeks tracked" />
         <StatCard value={String(stats.completed)} label="Sessions done" />
         <StatCard
@@ -71,8 +78,8 @@ export default function HistoryView({ weeks, stats }: Props) {
                   className="mx-3 mb-2.5 bg-surface border border-app-border rounded-[14px] p-3.5 md:mx-0"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-mono text-[12px] text-text-muted">{label}</span>
-                    <span className="font-mono text-[12px] font-medium text-app-text">{pct}%</span>
+                    <span className="font-mono text-xs text-text-muted">{label}</span>
+                    <span className="font-mono text-xs font-medium" style={{ color: completionColor(pct) }}>{pct}%</span>
                   </div>
                   <div className="h-1 bg-app-border rounded-sm overflow-hidden mb-2">
                     <div className="h-full rounded-sm bg-gradient-bar" style={{ width: `${pct}%` }} />
@@ -89,7 +96,7 @@ export default function HistoryView({ weeks, stats }: Props) {
           </div>
         </>
       ) : (
-        <div className="text-center py-6 px-6 text-[15px] text-text-dim">
+        <div className="text-center py-6 px-6 text-base text-text-dim">
           No history yet
         </div>
       )}
@@ -104,7 +111,7 @@ function StatCard({ value, label, valueColor }: { value: string; label: string; 
       <div className="font-mono text-[28px] font-bold leading-none" style={{ color: valueColor ?? 'var(--text)' }}>
         {value}
       </div>
-      <div className="text-[12px] text-text-muted mt-1">
+      <div className="text-xs text-text-muted mt-1">
         {lines[0]}
         {lines[1] && <><br /><span className="text-[11px] opacity-70">{lines[1]}</span></>}
       </div>

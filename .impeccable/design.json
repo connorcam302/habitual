@@ -1,141 +1,138 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-05-14T00:00:00Z",
+  "generatedAt": "2026-05-18T12:00:00.000Z",
   "title": "Design System: Habitual",
   "extensions": {
     "colorMeta": {
-      "bg":           { "role": "neutral", "displayName": "Midnight Void",   "canonical": "oklch(4% 0.008 264)",  "tonalRamp": ["#080810", "#0f0f1c", "#16162a", "#1e1e35", "#2a2a45", "#3a3a5a", "#5a5a7a", "#9898b8"] },
-      "surface":      { "role": "neutral", "displayName": "Obsidian Shell",  "canonical": "oklch(8% 0.012 264)",  "tonalRamp": ["#080810", "#0f0f1c", "#16162a", "#1e1e35", "#2a2a45", "#3a3a5a", "#5a5a7a", "#9898b8"] },
-      "surface-2":    { "role": "neutral", "displayName": "Lifted Surface",  "canonical": "oklch(11% 0.015 264)", "tonalRamp": ["#080810", "#0f0f1c", "#16162a", "#1e1e35", "#2a2a45", "#3a3a5a", "#5a5a7a", "#9898b8"] },
-      "surface-3":    { "role": "neutral", "displayName": "Inset Surface",   "canonical": "oklch(14% 0.018 264)", "tonalRamp": ["#080810", "#0f0f1c", "#16162a", "#1e1e35", "#2a2a45", "#3a3a5a", "#5a5a7a", "#9898b8"] },
-      "border":       { "role": "neutral", "displayName": "Division Line",   "canonical": "oklch(20% 0.02 264)",  "tonalRamp": ["#080810", "#0f0f1c", "#16162a", "#1e1e35", "#2a2a45", "#3a3a5a", "#5a5a7a", "#9898b8"] },
-      "text-primary": { "role": "neutral", "displayName": "Titanium White",  "canonical": "oklch(95% 0.008 264)", "tonalRamp": ["#2a2a45", "#3a3a5a", "#5a5a7a", "#7878a0", "#9898b8", "#c0c0d8", "#d8d8ec", "#eeeeff"] },
-      "text-secondary":{ "role": "neutral","displayName": "Muted Slate",     "canonical": "oklch(50% 0.009 248)", "tonalRamp": ["#1a1a2a", "#252535", "#353548", "#454560", "#6b7280", "#8a94a0", "#b0b8c0", "#d4d8dc"] },
-      "text-tertiary":{ "role": "neutral", "displayName": "Dim Slate",       "canonical": "oklch(40% 0.009 248)", "tonalRamp": ["#1a1a2a", "#252535", "#353548", "#4b5563", "#6b7280", "#8a94a0", "#b0b8c0", "#d4d8dc"] },
-      "football":     { "role": "primary", "displayName": "Football Blue",   "canonical": "oklch(60% 0.2 254)",   "tonalRamp": ["#0a0e1f", "#101a38", "#1a2a56", "#2640a0", "#3b82f6", "#5b98f8", "#8bb8fa", "#bdd7fd"] },
-      "strength":     { "role": "secondary","displayName": "Strength Purple","canonical": "oklch(62% 0.27 302)",  "tonalRamp": ["#180a2a", "#2d1450", "#4e2282", "#7c3ab5", "#a855f7", "#be7af9", "#d4a4fb", "#eacefe"] },
-      "speed":        { "role": "tertiary","displayName": "Speed Orange",    "canonical": "oklch(70% 0.21 41)",   "tonalRamp": ["#1f0c02", "#3d1804", "#7a2e09", "#c44a12", "#f97316", "#fb9148", "#fdb07c", "#fdd4b4"] },
-      "cardio":       { "role": "tertiary","displayName": "Cardio Green",    "canonical": "oklch(71% 0.2 143)",   "tonalRamp": ["#031708", "#062d10", "#0d501e", "#167a30", "#22c55e", "#52d47e", "#8ae4a6", "#c2f2cc"] },
-      "language":     { "role": "tertiary","displayName": "Language Cyan",   "canonical": "oklch(71% 0.14 205)",  "tonalRamp": ["#02151f", "#03303e", "#055370", "#0782a4", "#06b6d4", "#3acce3", "#7ce0ee", "#c0f0f8"] },
-      "injured":      { "role": "tertiary","displayName": "Injury Amber",    "canonical": "oklch(73% 0.18 67)",   "tonalRamp": ["#1f1002", "#3d2004", "#7a3e09", "#c46012", "#f59e0b", "#f7b53a", "#f9ce7a", "#fce8b8"] },
-      "cancelled":    { "role": "tertiary","displayName": "Cancelled Red",   "canonical": "oklch(62% 0.22 25)",   "tonalRamp": ["#1f0202", "#3d0505", "#7a0a0a", "#c41414", "#ef4444", "#f36868", "#f79898", "#fac8c8"] }
+      "bg":             { "role": "neutral",   "displayName": "Abyss Navy",        "canonical": "oklch(0.05 0.010 218deg)", "tonalRamp": ["oklch(0.05 0.010 218deg)", "oklch(0.10 0.015 218deg)", "oklch(0.17 0.020 218deg)", "oklch(0.26 0.025 218deg)", "oklch(0.38 0.026 218deg)", "oklch(0.52 0.022 218deg)", "oklch(0.70 0.016 218deg)", "oklch(0.88 0.010 218deg)"] },
+      "surface":        { "role": "neutral",   "displayName": "Deep Shell",        "canonical": "oklch(0.09 0.014 218deg)", "tonalRamp": ["oklch(0.05 0.010 218deg)", "oklch(0.09 0.014 218deg)", "oklch(0.16 0.020 218deg)", "oklch(0.25 0.025 218deg)", "oklch(0.37 0.026 218deg)", "oklch(0.51 0.022 218deg)", "oklch(0.69 0.016 218deg)", "oklch(0.87 0.010 218deg)"] },
+      "surface-2":      { "role": "neutral",   "displayName": "Navy Shell",        "canonical": "oklch(0.12 0.018 218deg)", "tonalRamp": ["oklch(0.05 0.010 218deg)", "oklch(0.09 0.014 218deg)", "oklch(0.12 0.018 218deg)", "oklch(0.22 0.024 218deg)", "oklch(0.35 0.026 218deg)", "oklch(0.50 0.022 218deg)", "oklch(0.68 0.016 218deg)", "oklch(0.87 0.010 218deg)"] },
+      "surface-3":      { "role": "neutral",   "displayName": "Lifted Navy",       "canonical": "oklch(0.15 0.022 218deg)", "tonalRamp": ["oklch(0.07 0.012 218deg)", "oklch(0.11 0.016 218deg)", "oklch(0.15 0.022 218deg)", "oklch(0.25 0.026 218deg)", "oklch(0.38 0.026 218deg)", "oklch(0.52 0.022 218deg)", "oklch(0.70 0.016 218deg)", "oklch(0.88 0.010 218deg)"] },
+      "border":         { "role": "neutral",   "displayName": "Slate Border",      "canonical": "oklch(0.20 0.026 218deg)", "tonalRamp": ["oklch(0.10 0.014 218deg)", "oklch(0.15 0.020 218deg)", "oklch(0.20 0.026 218deg)", "oklch(0.30 0.028 218deg)", "oklch(0.42 0.026 218deg)", "oklch(0.56 0.022 218deg)", "oklch(0.72 0.016 218deg)", "oklch(0.90 0.010 218deg)"] },
+      "text-primary":   { "role": "neutral",   "displayName": "Papaya Cream",      "canonical": "oklch(0.96 0.030 88deg)",  "tonalRamp": ["oklch(0.30 0.050 88deg)", "oklch(0.45 0.065 88deg)", "oklch(0.57 0.080 88deg)", "oklch(0.68 0.080 88deg)", "oklch(0.78 0.065 88deg)", "oklch(0.86 0.050 88deg)", "oklch(0.92 0.038 88deg)", "oklch(0.96 0.030 88deg)"] },
+      "text-secondary": { "role": "neutral",   "displayName": "Steel Mist",        "canonical": "oklch(0.71 0.050 218deg)", "tonalRamp": ["oklch(0.20 0.018 218deg)", "oklch(0.30 0.028 218deg)", "oklch(0.42 0.038 218deg)", "oklch(0.53 0.048 218deg)", "oklch(0.63 0.050 218deg)", "oklch(0.71 0.050 218deg)", "oklch(0.81 0.038 218deg)", "oklch(0.91 0.022 218deg)"] },
+      "text-tertiary":  { "role": "neutral",   "displayName": "Gunmetal Blue",     "canonical": "oklch(0.53 0.065 218deg)", "tonalRamp": ["oklch(0.18 0.022 218deg)", "oklch(0.27 0.034 218deg)", "oklch(0.37 0.048 218deg)", "oklch(0.47 0.060 218deg)", "oklch(0.53 0.065 218deg)", "oklch(0.64 0.060 218deg)", "oklch(0.76 0.045 218deg)", "oklch(0.90 0.025 218deg)"] },
+      "football":       { "role": "primary",   "displayName": "Brick Red",         "canonical": "oklch(0.44 0.220 28deg)",  "tonalRamp": ["oklch(0.18 0.080 28deg)", "oklch(0.25 0.120 28deg)", "oklch(0.33 0.170 28deg)", "oklch(0.40 0.210 28deg)", "oklch(0.44 0.220 28deg)", "oklch(0.56 0.200 28deg)", "oklch(0.70 0.140 28deg)", "oklch(0.88 0.070 28deg)"] },
+      "strength":       { "role": "secondary", "displayName": "Warm Gold",         "canonical": "oklch(0.78 0.160 80deg)",  "tonalRamp": ["oklch(0.22 0.060 80deg)", "oklch(0.34 0.090 80deg)", "oklch(0.46 0.120 80deg)", "oklch(0.58 0.140 80deg)", "oklch(0.70 0.155 80deg)", "oklch(0.78 0.160 80deg)", "oklch(0.86 0.120 80deg)", "oklch(0.93 0.065 80deg)"] },
+      "speed":          { "role": "tertiary",  "displayName": "Speed Amber",       "canonical": "oklch(0.67 0.20 38deg)",   "tonalRamp": ["oklch(0.18 0.07 38deg)", "oklch(0.28 0.11 38deg)", "oklch(0.38 0.16 38deg)", "oklch(0.50 0.19 38deg)", "oklch(0.67 0.20 38deg)", "oklch(0.75 0.17 38deg)", "oklch(0.84 0.12 38deg)", "oklch(0.93 0.05 38deg)"] },
+      "cardio":         { "role": "tertiary",  "displayName": "Cardio Emerald",    "canonical": "oklch(0.63 0.17 150deg)",  "tonalRamp": ["oklch(0.17 0.06 150deg)", "oklch(0.26 0.09 150deg)", "oklch(0.37 0.13 150deg)", "oklch(0.49 0.16 150deg)", "oklch(0.63 0.17 150deg)", "oklch(0.73 0.14 150deg)", "oklch(0.82 0.10 150deg)", "oklch(0.93 0.04 150deg)"] },
+      "language":       { "role": "tertiary",  "displayName": "Steel Blue",        "canonical": "oklch(0.64 0.070 218deg)", "tonalRamp": ["oklch(0.18 0.025 218deg)", "oklch(0.28 0.040 218deg)", "oklch(0.38 0.055 218deg)", "oklch(0.50 0.065 218deg)", "oklch(0.64 0.070 218deg)", "oklch(0.73 0.060 218deg)", "oklch(0.82 0.045 218deg)", "oklch(0.92 0.025 218deg)"] },
+      "injured":        { "role": "status",    "displayName": "Injury Amber",      "canonical": "oklch(0.73 0.16 62deg)",   "tonalRamp": ["oklch(0.18 0.06 62deg)", "oklch(0.28 0.09 62deg)", "oklch(0.40 0.13 62deg)", "oklch(0.53 0.15 62deg)", "oklch(0.73 0.16 62deg)", "oklch(0.80 0.13 62deg)", "oklch(0.87 0.09 62deg)", "oklch(0.94 0.04 62deg)"] },
+      "cancelled":      { "role": "status",    "displayName": "Cancelled Crimson", "canonical": "oklch(0.57 0.21 22deg)",   "tonalRamp": ["oklch(0.15 0.07 22deg)", "oklch(0.25 0.11 22deg)", "oklch(0.36 0.16 22deg)", "oklch(0.46 0.19 22deg)", "oklch(0.57 0.21 22deg)", "oklch(0.68 0.17 22deg)", "oklch(0.79 0.12 22deg)", "oklch(0.91 0.05 22deg)"] }
     },
     "typographyMeta": {
-      "title":     { "displayName": "Title",     "purpose": "Week header, modal titles, primary navigation labels." },
-      "body":      { "displayName": "Body",      "purpose": "Modal subtitles and supplementary prose. Rare." },
-      "label":     { "displayName": "Label",     "purpose": "Status pills, felt buttons, tab labels, week summary pills." },
-      "mono-data": { "displayName": "Mono Data", "purpose": "Timestamps, dates, percentages, section dividers, wordmark." }
+      "title":     { "displayName": "Title",     "purpose": "Current week range in the header. Also the Card Name scale at 15px/600. Most-seen text in the UI." },
+      "body":      { "displayName": "Body",      "purpose": "Modal supplementary prose. Rare in this UI; most text is Label or Title scale." },
+      "label":     { "displayName": "Label",     "purpose": "Status pills, felt buttons, week summary pills, modal section headings. All interactive labels." },
+      "mono-data": { "displayName": "Mono Data", "purpose": "Timestamps, dates, duration badges, percentages, section dividers, HABITUAL wordmark. JetBrains Mono exclusively — never on interactive labels." }
     },
     "shadows": [],
     "motion": [
-      { "name": "state-change",   "value": "0.15s ease",            "purpose": "Default interactive state transitions (hover, active, border-color, opacity)." },
-      { "name": "card-expand",    "value": "grid-template-rows 0.28s ease", "purpose": "Session card expand/collapse via grid row animation." },
-      { "name": "progress-fill",  "value": "width 0.5s ease",       "purpose": "Progress bar fill width update on session status change." },
-      { "name": "status-opacity", "value": "opacity 0.2s ease",     "purpose": "Session card opacity transition on done/cancelled/skipped state." }
+      { "name": "ease-card",     "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Card hover and status state transitions. 150ms." },
+      { "name": "ease-progress", "value": "ease",                            "purpose": "Progress bar width change only. 400ms. Width is the only animated layout value in the system." },
+      { "name": "modal-blur",    "value": "backdrop-filter: blur(6px)",      "purpose": "Modal overlay structural separation. Used exactly once; not a decoration pattern." }
     ],
     "breakpoints": [
-      { "name": "desktop", "value": "768px", "purpose": "Switches from mobile (single column, bottom tab bar, bottom-sheet modal) to desktop (sidebar layout, inline header tabs, centered dialog modal)." }
+      { "name": "md", "value": "768px", "purpose": "Mobile-to-desktop pivot. Below: bottom tab bar, full-width session cards, bottom-sheet modal. Above: sidebar layout, centered dialog modal, inline desktop tab switcher." }
     ]
   },
   "components": [
     {
-      "name": "Session Card — Football",
+      "name": "Session Card",
       "kind": "card",
       "refersTo": "session-card",
-      "description": "The primary interaction unit. Taps to complete; expands to log felt quality and notes.",
-      "html": "<div class=\"ds-session-card\" data-type=\"football\"><div class=\"ds-card-header\"><span class=\"ds-type-dot\"></span><div class=\"ds-card-info\"><div class=\"ds-card-name\">5-a-side football</div><div class=\"ds-card-time\">19:00 – 20:00</div></div><button class=\"ds-status-btn ds-status-done\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#22c55e\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"/></svg></button><span class=\"ds-chevron\">&#9662;</span></div></div>",
-      "css": ".ds-session-card { background: #0f0f1c; border-radius: 14px; border: 1px solid #2a2a45; border-left: 4px solid #3b82f6; overflow: hidden; cursor: pointer; transition: opacity 0.2s ease; font-family: 'Space Grotesk', sans-serif; max-width: 420px; } .ds-session-card:active { opacity: 0.75; } .ds-card-header { display: flex; align-items: center; padding: 13px 14px; gap: 12px; } .ds-type-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: #3b82f6; } .ds-card-info { flex: 1; min-width: 0; } .ds-card-name { font-size: 15px; font-weight: 600; color: #eeeeff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-card-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6b7280; margin-top: 2px; } .ds-status-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #2a2a45; background: transparent; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s ease; cursor: pointer; } .ds-status-btn.ds-status-done { border-color: #22c55e; background: #22c55e18; } .ds-status-btn:hover { border-color: #6b7280; } .ds-chevron { font-size: 12px; color: #4b5563; margin-left: 2px; flex-shrink: 0; }"
+      "description": "Primary unit of the interface. Tapping opens the Session Modal. Quick-done circle toggles done/pending inline without opening modal.",
+      "html": "<div class=\"ds-session-card\">\n  <div class=\"ds-session-card__dot\" style=\"background: #c1121f\"></div>\n  <div class=\"ds-session-card__info\">\n    <div class=\"ds-session-card__name\">Tuesday 5-a-side</div>\n    <div class=\"ds-session-card__time\">20:00 – 21:00</div>\n  </div>\n  <button class=\"ds-session-card__done-btn\" aria-label=\"Mark as done\">\n    <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"oklch(0.63 0.17 150deg)\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"/></svg>\n  </button>\n  <svg class=\"ds-session-card__arrow\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><polyline points=\"9 18 15 12 9 6\"/></svg>\n</div>",
+      "css": ".ds-session-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #00131d; border: 1.5px solid #c1121f; border-radius: 14px; cursor: pointer; transition: background 0.15s, opacity 0.2s; } .ds-session-card:hover { background: #001c2b; } .ds-session-card:active { opacity: 0.75; } .ds-session-card__dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; } .ds-session-card__info { flex: 1; min-width: 0; } .ds-session-card__name { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; color: #fdf0d5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-session-card__time { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; color: #477fa2; margin-top: 1px; } .ds-session-card__done-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid oklch(0.63 0.17 150deg); background: color-mix(in oklch, oklch(0.63 0.17 150deg) 9%, transparent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; } .ds-session-card__arrow { color: #477fa2; flex-shrink: 0; margin-left: 2px; }"
     },
     {
-      "name": "Session Card — Done",
-      "kind": "card",
-      "refersTo": "session-card",
-      "description": "Completed session state: opacity reduced to 55%, status button filled green.",
-      "html": "<div class=\"ds-session-card ds-card-done\" data-type=\"strength\"><div class=\"ds-card-header\"><span class=\"ds-type-dot\" style=\"background:#a855f7;\"></span><div class=\"ds-card-info\"><div class=\"ds-card-name\">Lower body strength</div><div class=\"ds-card-time\">08:10 – 08:40</div></div><button class=\"ds-status-btn ds-status-done\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#22c55e\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"20 6 9 17 4 12\"/></svg></button><span class=\"ds-chevron\">&#9662;</span></div></div>",
-      "css": ".ds-session-card { background: #0f0f1c; border-radius: 14px; border: 1px solid #2a2a45; border-left: 4px solid #a855f7; overflow: hidden; cursor: pointer; font-family: 'Space Grotesk', sans-serif; max-width: 420px; } .ds-session-card.ds-card-done { opacity: 0.55; } .ds-card-header { display: flex; align-items: center; padding: 13px 14px; gap: 12px; } .ds-type-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; } .ds-card-info { flex: 1; min-width: 0; } .ds-card-name { font-size: 15px; font-weight: 600; color: #eeeeff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ds-card-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6b7280; margin-top: 2px; } .ds-status-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #22c55e; background: #22c55e18; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; } .ds-chevron { font-size: 12px; color: #4b5563; margin-left: 2px; flex-shrink: 0; }"
-    },
-    {
-      "name": "Status Pills",
+      "name": "Status Pill — Active (Done)",
       "kind": "chip",
-      "refersTo": "status-pill",
-      "description": "Inline status selectors inside an expanded session card. Four states for physical sessions.",
-      "html": "<div class=\"ds-status-row\"><button class=\"ds-status-pill ds-pill-done\">Done</button><button class=\"ds-status-pill\">Injured</button><button class=\"ds-status-pill\">Cancelled</button><button class=\"ds-status-pill\">Pending</button></div>",
-      "css": ".ds-status-row { display: flex; gap: 8px; font-family: 'Space Grotesk', sans-serif; } .ds-status-pill { flex: 1; padding: 8px 6px; border-radius: 10px; border: 1.5px solid #2a2a45; background: transparent; font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; color: #6b7280; cursor: pointer; transition: all 0.15s ease; text-align: center; white-space: nowrap; } .ds-status-pill:hover { border-color: #3a3a5a; color: #eeeeff; } .ds-status-pill:active { opacity: 0.7; } .ds-pill-done { border-color: #22c55e; color: #22c55e; background: #22c55e14; } .ds-pill-injured { border-color: #f59e0b; color: #f59e0b; background: #f59e0b14; } .ds-pill-cancelled { border-color: #ef4444; color: #ef4444; background: #ef444414; } .ds-pill-skipped { border-color: #6b7280; color: #6b7280; background: #6b728014; }"
+      "refersTo": "status-pill-done",
+      "description": "One of four status selectors in the Session Modal (Done, Injured, Cancelled, Pending). Active Done state shown. Active border, text, and 8% tint use the status color.",
+      "html": "<button class=\"ds-status-pill ds-status-pill--done\">Done</button>",
+      "css": ".ds-status-pill { flex: 1; padding: 8px 6px; border-radius: 10px; border: 1.5px solid #003049; background: transparent; color: #85afc9; font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; text-align: center; white-space: nowrap; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s; } .ds-status-pill--done { border-color: oklch(0.63 0.17 150deg); color: oklch(0.63 0.17 150deg); background: color-mix(in oklch, oklch(0.63 0.17 150deg) 8%, transparent); } .ds-status-pill:hover:not(.ds-status-pill--done) { border-color: #85afc9; color: #fdf0d5; }"
     },
     {
-      "name": "Felt Buttons",
+      "name": "Felt Button — Active",
       "kind": "chip",
-      "refersTo": "felt-btn",
-      "description": "Post-session quality rating for physical sessions. Single accent (Strength Purple) regardless of session type.",
-      "html": "<div class=\"ds-felt-section\"><div class=\"ds-felt-label\">How did it feel?</div><div class=\"ds-felt-row\"><button class=\"ds-felt-btn ds-felt-active\">Great</button><button class=\"ds-felt-btn\">Good</button><button class=\"ds-felt-btn\">Okay</button><button class=\"ds-felt-btn\">Tough</button></div></div>",
-      "css": ".ds-felt-section { font-family: 'Space Grotesk', sans-serif; } .ds-felt-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: #4b5563; text-transform: uppercase; margin-bottom: 8px; } .ds-felt-row { display: flex; gap: 6px; } .ds-felt-btn { flex: 1; padding: 7px 4px; border-radius: 8px; border: 1.5px solid #2a2a45; background: transparent; font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 600; color: #6b7280; cursor: pointer; transition: all 0.15s ease; text-align: center; } .ds-felt-btn:hover { border-color: #a855f760; color: #a855f7; } .ds-felt-btn:active { opacity: 0.7; } .ds-felt-btn.ds-felt-active { border-color: #a855f7; color: #a855f7; background: #a855f714; }"
+      "refersTo": "felt-btn-active",
+      "description": "Session quality rating (Great / Good / Okay / Tough). Physical sessions only. Active state always uses Warm Gold, regardless of session type.",
+      "html": "<button class=\"ds-felt-btn ds-felt-btn--active\">Great</button>",
+      "css": ".ds-felt-btn { flex: 1; padding: 8px 4px; border-radius: 10px; border: 1.5px solid #003049; background: transparent; color: #85afc9; font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; text-align: center; cursor: pointer; transition: border-color 0.15s, color 0.15s, background 0.15s; } .ds-felt-btn--active { border-color: #f5ae22; color: #f5ae22; background: color-mix(in oklch, #f5ae22 14%, transparent); } .ds-felt-btn:hover:not(.ds-felt-btn--active) { border-color: #f5ae22; color: #f5ae22; }"
     },
     {
-      "name": "Week Navigation",
-      "kind": "nav",
-      "refersTo": "week-nav-btn",
-      "description": "Header prev/next week controls flanking the current week label.",
-      "html": "<div class=\"ds-week-nav\"><button class=\"ds-nav-btn\">&#8249;</button><span class=\"ds-week-label\">5 – 11 May</span><button class=\"ds-nav-btn\">&#8250;</button></div>",
-      "css": ".ds-week-nav { display: flex; align-items: center; gap: 12px; padding: 4px 0; font-family: 'Space Grotesk', sans-serif; } .ds-nav-btn { background: #16162a; border: 1px solid #2a2a45; border-radius: 10px; padding: 8px 14px; color: #eeeeff; font-size: 18px; cursor: pointer; line-height: 1; transition: background 0.15s ease; } .ds-nav-btn:hover { background: #1e1e35; } .ds-nav-btn:active { opacity: 0.8; } .ds-week-label { font-size: 16px; font-weight: 700; color: #eeeeff; flex: 1; text-align: center; }"
+      "name": "Workout Plan Panel",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Read-only exercise brief inside the Session Modal for physical sessions. Category color tints the header, detail values, and tip footer. Shown here with Strength (Warm Gold).",
+      "html": "<div class=\"ds-workout-panel\">\n  <div class=\"ds-workout-panel__header\">\n    <span class=\"ds-workout-panel__title\">Pull Day</span>\n    <span class=\"ds-workout-panel__duration\">45 min</span>\n  </div>\n  <div class=\"ds-workout-panel__row\"><span class=\"ds-workout-panel__num\">1</span><span class=\"ds-workout-panel__name\">Pull-ups</span><span class=\"ds-workout-panel__detail\">4 × max</span></div>\n  <div class=\"ds-workout-panel__row\"><span class=\"ds-workout-panel__num\">2</span><span class=\"ds-workout-panel__name\">Weighted Pull-ups</span><span class=\"ds-workout-panel__detail\">3 × 5</span></div>\n  <div class=\"ds-workout-panel__tip\">Squeeze at the top of every pull. Control the descent.</div>\n</div>",
+      "css": ".ds-workout-panel { border-radius: 12px; border: 1.5px solid color-mix(in oklch, #f5ae22 20%, #003049); overflow: hidden; } .ds-workout-panel__header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: color-mix(in oklch, #f5ae22 6%, #00131d); } .ds-workout-panel__title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: #fdf0d5; } .ds-workout-panel__duration { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #f5ae22; background: color-mix(in oklch, #f5ae22 12%, transparent); padding: 2px 8px; border-radius: 9999px; } .ds-workout-panel__row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #00131d; border-top: 1px solid #003049; } .ds-workout-panel__num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #477fa2; width: 16px; text-align: right; flex-shrink: 0; } .ds-workout-panel__name { flex: 1; font-family: 'Space Grotesk', sans-serif; font-size: 13px; color: #fdf0d5; } .ds-workout-panel__detail { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #f5ae22; flex-shrink: 0; } .ds-workout-panel__tip { padding: 10px 14px; font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-style: italic; color: #85afc9; background: color-mix(in oklch, #f5ae22 4%, #00131d); border-top: 1px solid #003049; }"
     },
     {
       "name": "Modal CTA Button",
       "kind": "button",
       "refersTo": "modal-cta",
-      "description": "Full-width primary action (Start Week / Save Changes). The only component permitted to carry the gradient.",
-      "html": "<button class=\"ds-modal-btn\">Start week</button>",
-      "css": ".ds-modal-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: linear-gradient(135deg, #3b82f6, #a855f7); color: #ffffff; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity 0.15s ease; display: block; max-width: 420px; } .ds-modal-btn:hover { opacity: 0.92; } .ds-modal-btn:active { opacity: 0.85; } .ds-modal-btn:focus-visible { outline: 2px solid #3b82f640; outline-offset: 2px; }"
-    },
-    {
-      "name": "Stat Card",
-      "kind": "card",
-      "refersTo": "stat-card",
-      "description": "Read-only data display in the All Time history view. JetBrains Mono for the number.",
-      "html": "<div class=\"ds-stat-card\"><div class=\"ds-stat-value\">87%</div><div class=\"ds-stat-label\">Completion rate</div></div>",
-      "css": ".ds-stat-card { background: #0f0f1c; border: 1px solid #2a2a45; border-radius: 14px; padding: 14px; display: inline-block; min-width: 120px; font-family: 'Space Grotesk', sans-serif; } .ds-stat-value { font-size: 28px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #eeeeff; line-height: 1; } .ds-stat-label { font-size: 12px; color: #6b7280; margin-top: 4px; }"
+      "description": "Full-width primary action on bottom-sheet modals. The only component carrying the Fire Gradient (Brick Red to Warm Gold).",
+      "html": "<button class=\"ds-modal-cta\">Start week</button>",
+      "css": ".ds-modal-cta { width: 100%; padding: 12px 24px; border: none; border-radius: 10px; background: linear-gradient(135deg, #c1121f, #f5ae22); color: #ffffff; font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; } .ds-modal-cta:hover { opacity: 0.92; } .ds-modal-cta:active { opacity: 0.85; } .ds-modal-cta:disabled { opacity: 0.40; cursor: not-allowed; }"
     },
     {
       "name": "Progress Bar",
       "kind": "custom",
       "refersTo": null,
-      "description": "Weekly completion fill. The only animated element in the main view; uses the Football-to-Purple gradient.",
-      "html": "<div class=\"ds-progress-wrap\"><div class=\"ds-progress-track\"><div class=\"ds-progress-fill\" style=\"width:64%;\"></div></div><span class=\"ds-progress-label\">9 / 14</span></div>",
-      "css": ".ds-progress-wrap { display: flex; align-items: center; gap: 10px; padding: 0 4px; } .ds-progress-track { flex: 1; height: 3px; background: #2a2a45; border-radius: 2px; overflow: hidden; } .ds-progress-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #3b82f6, #a855f7); transition: width 0.5s ease; } .ds-progress-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6b7280; white-space: nowrap; }"
+      "description": "The sole animated element. Width-only transition on fill. Fire Gradient (Brick Red to Warm Gold) — the one reward metaphor in the system.",
+      "html": "<div class=\"ds-progress-track\"><div class=\"ds-progress-fill\" style=\"width: 60%\"></div></div>",
+      "css": ".ds-progress-track { height: 3px; background: #003049; border-radius: 2px; overflow: hidden; } .ds-progress-fill { height: 100%; background: linear-gradient(90deg, #c1121f, #f5ae22); border-radius: 2px; transition: width 0.4s ease; }"
+    },
+    {
+      "name": "Stat Card",
+      "kind": "card",
+      "refersTo": "stat-card",
+      "description": "Read-only data container in the All Time history view. JetBrains Mono value at 28px is the system's one display-scale moment.",
+      "html": "<div class=\"ds-stat-card\"><div class=\"ds-stat-card__value\">87%</div><div class=\"ds-stat-card__label\">Completion rate</div></div>",
+      "css": ".ds-stat-card { background: #00131d; border: 1px solid #003049; border-radius: 14px; padding: 14px; } .ds-stat-card__value { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700; color: #fdf0d5; line-height: 1; } .ds-stat-card__label { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 400; color: #85afc9; margin-top: 4px; }"
     }
   ],
   "narrative": {
-    "northStar": "The Performance Shell",
-    "overview": "The interface has one job: disappear. Habitual is built for daily use by one person — a morning glance, an evening tap, a quiet record of accumulated effort. Every decision in this system asks whether it helps the user log a session faster and exit cleanly, or adds weight to what should be a frictionless ritual.\n\nThe palette is deep Midnight Ink: near-black with a cold violet undertone that reads dark and deliberate under bedroom lighting at 7am and office fluorescents at 9pm. No light mode; the physical scene forces the answer. Five category colors are the only saturation in the palette; outside of them, the system is near-monochrome. This system explicitly rejects the gamified fitness app aesthetic and the productivity SaaS chrome.",
+    "northStar": "The Training Log",
+    "overview": "Habitual is a record, not a motivator. It holds what happened without comment. You open it before a session to see your plan; you open it after to mark it done. The interface asks nothing of you beyond that. A field notebook doesn't clap when you write in it.\n\nThe palette is Naval Ink: deep warm navy with a hint of the sea, topped by papaya-cream text and five bright category voices. No cold-violet surfaces. No cobalt accents. No gradient that looks like an LLM product. The physical scene forces the answer: Connor unlocks his phone post-session, tired, thumb on glass. The interface reads warm, direct, and recognisably personal — like a tool he built for himself, not one he's borrowing from a startup.\n\nFive category colors — Brick Red (football), Warm Gold (strength), Speed Amber, Cardio Emerald, Steel Blue (language) — carry all the visual energy. Their color-mix tints extend each voice at low opacity only. Outside the five voices and their tints, the surface is near-monochrome naval blue. The red-to-gold gradient on the progress bar is the one reward metaphor — fire building as the week fills up. This system explicitly rejects: gamified fitness app chrome (MyFitnessPal, Strava), productivity SaaS aesthetic (Notion, ClickUp), and AI product palettes (cobalt-to-violet gradients, cold dark surfaces, glowing blue accents, anything that reads LLM interface).",
     "keyCharacteristics": [
-      "Midnight Ink foundation with four tonal surface depths; no box-shadows",
-      "Five closed-vocabulary category colors; no other accents",
-      "Two-typeface system: Space Grotesk for all UI copy, JetBrains Mono for data only",
-      "Touch-first: 44px+ tap targets, safe-area inset awareness, iOS PWA optimized",
-      "Component states use opacity and tint shifts; never shape or size changes"
+      "Naval Ink foundation: deep warm navy in four tiers, zero box-shadows",
+      "Papaya cream primary text against navy — warm and readable, not clinical white",
+      "Five closed-vocabulary category colors; only color-mix tints at 4–15% opacity extend them",
+      "Two-typeface system: Space Grotesk for UI, JetBrains Mono for data",
+      "Red-to-gold Fire Gradient as the sole reward metaphor; no other gradients",
+      "Bottom-sheet modals as the detail surface; accordion pattern retired",
+      "Touch-first: 44px+ tap targets, safe-area insets, iPhone PWA optimised"
     ],
     "rules": [
-      { "name": "The Five Voices Rule",        "body": "Football, Strength, Speed, Cardio, and Language are a closed vocabulary of five. They identify session types and map to status signals; never repurposed for decoration or UI state outside their defined roles. No sixth accent color is permitted.", "section": "colors" },
-      { "name": "The Gradient Exception Rule", "body": "Exactly one gradient exists: linear-gradient on the progress fill and modal CTA. All other surfaces, buttons, and containers are flat solids.", "section": "colors" },
-      { "name": "The Mono Reserve Rule",       "body": "JetBrains Mono appears only on timestamps, dates, percentages, the HABITUAL wordmark, and section dividers. Interactive copy always uses Space Grotesk. Mixing the two faces on a single interactive element is prohibited.", "section": "typography" },
-      { "name": "The Shadow-Free Rule",        "body": "No box-shadow in this system. Depth is achieved by surface tier escalation, not shadows. The sole exception is backdrop-filter: blur(6px) on the modal overlay — structural, used once, not to be replicated decoratively.", "section": "elevation" }
+      { "name": "The Five Voices Rule",    "body": "Brick Red, Warm Gold, Speed Amber, Cardio Emerald, and Steel Blue are a closed vocabulary. No sixth accent color. The only permitted extension is color-mix(in oklch, <voice> X%, transparent) at 4–15% opacity. Category colors are never repurposed for UI states outside their defined roles.", "section": "colors" },
+      { "name": "The Fire Gradient Rule",  "body": "Exactly one gradient exists: linear-gradient(90deg, #c1121f, #f5ae22) on the progress fill; linear-gradient(135deg, #c1121f, #f5ae22) on the modal CTA. Red to gold — fire building through the week. All other surfaces and buttons are flat solids. No cobalt-to-violet, no cool gradients, nothing that reads AI.", "section": "colors" },
+      { "name": "The Mono Reserve Rule",   "body": "JetBrains Mono appears only on timestamps, dates, percentages, duration badges, section dividers formatted as data headings, and the HABITUAL wordmark. All interactive labels use Space Grotesk. Mixing the two on a single interactive element is prohibited.", "section": "typography" },
+      { "name": "The Shadow-Free Rule",    "body": "No box-shadow. Depth is surface tier only. The modal backdrop blur is structural, used exactly once, not replicated elsewhere.", "section": "elevation" }
     ],
     "dos": [
-      "Do use the five category colors exactly as defined: Football #3b82f6, Strength #a855f7, Speed #f97316, Cardio #22c55e, Language #06b6d4.",
-      "Do use JetBrains Mono only for data: timestamps, dates, percentages, section dividers, wordmark.",
-      "Do express depth through surface tier escalation (bg → surface → surface-2 → surface-3).",
-      "Do keep all tap targets at a minimum 44x44px.",
-      "Do use opacity shifts (45–55%) to convey completed or inactive session states.",
-      "Do let the category colors do the visual work; they do not need competition from decorative accents."
+      "Do use the five category colors exactly as defined: Football #c1121f, Strength #f5ae22, Speed oklch(0.67 0.20 38deg), Cardio oklch(0.63 0.17 150deg), Language #669bbc. Their meaning is established; deviation silently breaks the vocabulary.",
+      "Do extend category colors only via color-mix(in oklch, <color> X%, transparent) at 4–15% opacity.",
+      "Do use JetBrains Mono only for data. Every interactive label uses Space Grotesk.",
+      "Do express depth through surface tier escalation only. No shadows.",
+      "Do keep tap targets at minimum 44×44px.",
+      "Do use opacity shifts (45–55%) to convey done/cancelled/skipped states.",
+      "Do treat the Session Modal as a briefing room: fast entry, clear hierarchy, fast exit."
     ],
     "donts": [
-      "Don't add gamified elements: streaks, completion rings, animated confetti, motivational copy. Anti-references: MyFitnessPal, Strava.",
-      "Don't use the productivity SaaS aesthetic: light theme, identical card grids, hero-metric template. Anti-references: Notion, ClickUp.",
-      "Don't add a sixth category color or repurpose existing ones outside their defined roles.",
-      "Don't use gradient text (background-clip: text). The gradient lives on fills and the modal CTA only.",
-      "Don't use glassmorphism beyond the modal overlay blur. Blurred-background cards or nav elements are prohibited.",
-      "Don't extend the border-left side-stripe pattern to new components.",
-      "Don't introduce a light theme or theme toggle.",
-      "Don't use box-shadow for any purpose."
+      "Don't add gamified elements: streaks, rings, confetti, motivational copy. Anti-references: MyFitnessPal, Strava.",
+      "Don't use the productivity SaaS aesthetic: light theme, card grids, hero-metric templates. Anti-references: Notion, ClickUp.",
+      "Don't use any palette that reads AI product: cobalt-to-violet gradients, cold blue-purple dark surfaces, glowing accents. Anti-reference: Cursor, Perplexity, any LLM interface. The app uses AI as a tool; it must not look like one.",
+      "Don't add a sixth category color or repurpose the existing five for new UI states.",
+      "Don't use gradient text (background-clip: text). The Fire Gradient lives on the progress fill and CTA only.",
+      "Don't use glassmorphism beyond the modal overlay blur.",
+      "Don't use box-shadow for any purpose.",
+      "Don't introduce a light theme.",
+      "Don't animate layout properties.",
+      "Don't open session detail inline. The accordion pattern is retired.",
+      "Don't replicate the full-border category-color card pattern on new components without deliberate review."
     ]
   }
 }

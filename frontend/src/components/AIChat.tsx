@@ -137,9 +137,9 @@ export default function AIChat({ currentWeek, sessions, officeDays, onApplied }:
           <div key={i}>
             <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[85%] px-4 py-3 text-[14px] leading-relaxed
+                className={`max-w-[85%] px-4 py-3 text-sm leading-relaxed
                   ${msg.role === 'user'
-                    ? 'rounded-2xl rounded-br-sm text-white'
+                    ? 'rounded-2xl rounded-br-sm text-app-text'
                     : 'rounded-2xl rounded-bl-sm bg-surface-2 border border-app-border text-app-text'}`}
                 style={msg.role === 'user' ? { background: 'var(--football)' } : undefined}
               >
@@ -159,7 +159,7 @@ export default function AIChat({ currentWeek, sessions, officeDays, onApplied }:
               </div>
             )}
             {msg.applied && (
-              <p className="text-[12px] text-text-dim mt-1 ml-1">✓ Changes applied</p>
+              <p className="text-xs text-text-dim mt-1 ml-1">✓ Changes applied</p>
             )}
           </div>
         ))}
@@ -191,7 +191,7 @@ export default function AIChat({ currentWeek, sessions, officeDays, onApplied }:
           }}
           placeholder="e.g. 'In the office Mon & Wed, injured my knee at Tuesday football'"
           rows={2}
-          className="flex-1 resize-none rounded-xl px-3 py-2.5 text-[14px] font-display
+          className="flex-1 resize-none rounded-xl px-3 py-2.5 text-sm font-display
             bg-surface-2 border border-app-border text-app-text
             placeholder:text-text-dim outline-none transition-colors
             focus:border-[color-mix(in_oklch,var(--football)_30%,transparent)]"
@@ -199,7 +199,7 @@ export default function AIChat({ currentWeek, sessions, officeDays, onApplied }:
         <button
           onClick={send}
           disabled={!input.trim() || loading}
-          className="px-4 py-2.5 rounded-xl text-white text-[14px] font-semibold font-display
+          className="px-4 py-2.5 rounded-xl text-white text-sm font-semibold font-display
             shrink-0 disabled:opacity-40 transition-opacity hover:opacity-90"
           style={{ background: 'var(--gradient-cta)' }}
         >
@@ -225,7 +225,7 @@ function ProposalCard({
         <div className="font-mono text-[10px] tracking-[0.1em] text-text-dim uppercase mb-1">
           Proposed changes
         </div>
-        <div className="text-[13px] text-app-text">{proposal.summary}</div>
+        <div className="text-sm text-app-text">{proposal.summary}</div>
       </div>
 
       {/* Office days row */}
@@ -265,7 +265,7 @@ function ProposalCard({
           className="flex items-start gap-3 px-4 py-2.5 border-b border-app-border last:border-b-0"
         >
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-semibold text-app-text truncate">{u.name}</div>
+            <div className="text-sm font-semibold text-app-text truncate">{u.name}</div>
             <div className="font-mono text-[10px] tracking-[0.08em] text-text-dim uppercase">
               {DAY_SHORT[u.day] ?? u.day}
             </div>
@@ -310,7 +310,7 @@ function ProposalCard({
             Add
           </span>
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-semibold text-app-text truncate">{ns.name}</div>
+            <div className="text-sm font-semibold text-app-text truncate">{ns.name}</div>
             <div className="font-mono text-[10px] tracking-[0.08em] text-text-dim uppercase">
               {DAY_SHORT[ns.day] ?? ns.day}
               {ns.time_slot && <span className="ml-2 normal-case tracking-normal">{ns.time_slot}</span>}
@@ -324,7 +324,7 @@ function ProposalCard({
         <button
           onClick={onApply}
           disabled={applying}
-          className="flex-1 py-2 rounded-xl text-white text-[13px] font-semibold font-display
+          className="flex-1 py-2 rounded-xl text-white text-sm font-semibold font-display
             disabled:opacity-50 transition-opacity hover:opacity-90"
           style={{ background: 'var(--gradient-cta)' }}
         >
@@ -334,7 +334,7 @@ function ProposalCard({
           onClick={onDismiss}
           disabled={applying}
           className="px-4 py-2 rounded-xl border border-app-border text-text-muted
-            text-[13px] font-semibold font-display
+            text-sm font-semibold font-display
             hover:border-[var(--text-muted)] hover:text-app-text transition-colors"
         >
           Dismiss
