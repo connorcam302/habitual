@@ -98,7 +98,7 @@ export default function App() {
     if (newOfficeDays !== undefined) setOfficeDays(newOfficeDays)
   }
 
-  const headerHeight = 'calc(var(--safe-top) + 106px)'
+  const headerHeight = 'calc(var(--safe-top) + var(--header-h))'
   const cssVars = { '--header-h': headerHeight } as React.CSSProperties
 
   if (loading) return <LoadingScreen />

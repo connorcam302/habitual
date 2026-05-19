@@ -41,7 +41,7 @@ export default function SessionModal({ session, onClose, onUpdate }: Props) {
   const s = session
   const typeColor = TYPE_COLORS[s.type] ?? 'var(--border)'
   const isChinese = s.type === 'chinese'
-  const plan = !isChinese ? getWorkoutPlan(s.type, s.id) : null
+  const plan = !isChinese ? getWorkoutPlan(s.type, s.name) : null
 
   const setStatus = async (status: SessionStatus) => {
     const updated = { ...s, status }

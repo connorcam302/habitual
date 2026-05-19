@@ -49,6 +49,19 @@ const PLANS: Record<string, WorkoutPlan[]> = {
       tip: 'Drive through your heels. Hinge at the hips, not the waist.',
     },
     {
+      title: 'Upper Body & Core',
+      duration: '50 min',
+      exercises: [
+        { name: 'DB Bench Press', detail: '3 × 10' },
+        { name: 'Pull-ups', detail: '4 × max' },
+        { name: 'DB Shoulder Press', detail: '3 × 10' },
+        { name: 'DB Bent-Over Rows', detail: '3 × 12' },
+        { name: 'Plank', detail: '3 × 60 sec' },
+        { name: 'Hollow body hold', detail: '3 × 30 sec' },
+      ],
+      tip: 'Superset push and pull movements to save time and balance the shoulders.',
+    },
+    {
       title: 'Full Body Power',
       duration: '40 min',
       exercises: [
@@ -112,6 +125,18 @@ const PLANS: Record<string, WorkoutPlan[]> = {
       tip: 'Aim for 5K race pace on each effort. Consistent splits beat going off too fast.',
     },
     {
+      title: 'Sprint & Plyo Block',
+      duration: '35 min',
+      exercises: [
+        { name: 'Dynamic warm-up', detail: '8 min' },
+        { name: 'Acceleration sprints (30 m)', detail: '6 ×' },
+        { name: 'Box jumps', detail: '4 × 8' },
+        { name: 'Bounding strides', detail: '4 × 40 m' },
+        { name: 'Cool-down walk/jog', detail: '5 min' },
+      ],
+      tip: 'Max effort on every sprint rep. Full recovery between — speed work is not cardio.',
+    },
+    {
       title: 'Hill Sprints',
       duration: '35 min',
       exercises: [
@@ -141,7 +166,7 @@ const PLANS: Record<string, WorkoutPlan[]> = {
         { name: 'Easy jog between surges', detail: '1–2 min each' },
         { name: 'Easy cool-down jog', detail: '5 min' },
       ],
-      tip: 'No watch, no rules — run by feel. It\'s the most fun way to build aerobic fitness.',
+      tip: "No watch, no rules — run by feel. It's the most fun way to build aerobic fitness.",
     },
   ],
 
@@ -163,7 +188,7 @@ const PLANS: Record<string, WorkoutPlan[]> = {
       exercises: [
         { name: 'Easy conversational jog', detail: '30–35 min' },
       ],
-      tip: 'Should feel almost embarrassingly easy. If you can\'t hold a conversation, slow down.',
+      tip: "Should feel almost embarrassingly easy. If you can't hold a conversation, slow down.",
     },
     {
       title: 'Bag & Pull Circuit',
@@ -179,8 +204,42 @@ const PLANS: Record<string, WorkoutPlan[]> = {
   ],
 }
 
-export function getWorkoutPlan(type: string, sessionId: number): WorkoutPlan | null {
+// Name-based plan index per type — checked before falling back to position.
+// Patterns match against the session name from the DB template.
+const NAME_MAP: Array<{ type: string; pattern: RegExp; index: number }> = [
+  // strength
+  { type: 'strength', pattern: /upper body|upper-body/i,        index: 3 }, // Upper Body & Core
+  { type: 'strength', pattern: /lower body|lower-body|legs/i,   index: 2 }, // Legs & Posterior Chain
+  { type: 'strength', pattern: /pull|back|row|bicep/i,          index: 1 }, // Pull Day
+  { type: 'strength', pattern: /push|chest|shoulder|press/i,    index: 0 }, // Push Day
+  { type: 'strength', pattern: /full body|power|total/i,        index: 4 }, // Full Body Power
+  // football
+  { type: 'football', pattern: /match|11-a-side|game/i,         index: 0 }, // Match Prep
+  { type: 'football', pattern: /ball mastery|technical|5-a-side|passing/i, index: 1 }, // Technical
+  { type: 'football', pattern: /conditioning|fitness|circuit/i, index: 2 }, // Conditioning
+  // speed
+  { type: 'speed',    pattern: /sprint.*plyo|plyo.*sprint/i,    index: 1 }, // Sprint & Plyo
+  { type: 'speed',    pattern: /dynamic.*warm|warm.*up/i,       index: 1 }, // Sprint & Plyo (warmup precedes it)
+  { type: 'speed',    pattern: /hill/i,                         index: 2 }, // Hill Sprints
+  { type: 'speed',    pattern: /tempo/i,                        index: 3 }, // Tempo Run
+  { type: 'speed',    pattern: /fartlek/i,                      index: 4 }, // Fartlek
+  { type: 'speed',    pattern: /interval|400/i,                 index: 0 }, // Interval Run
+  // cardio
+  { type: 'cardio',   pattern: /zone 2|easy|jog|run/i,         index: 1 }, // Easy Run
+  { type: 'cardio',   pattern: /bag.*pull|pull.*bag/i,          index: 2 }, // Bag & Pull
+  { type: 'cardio',   pattern: /kb|kettlebell|circuit|swing/i,  index: 0 }, // KB Circuit
+]
+
+export function getWorkoutPlan(type: string, sessionName: string): WorkoutPlan | null {
   const plans = PLANS[type]
   if (!plans || plans.length === 0) return null
-  return plans[sessionId % plans.length]
+
+  for (const entry of NAME_MAP) {
+    if (entry.type === type && entry.pattern.test(sessionName) && entry.index < plans.length) {
+      return plans[entry.index]
+    }
+  }
+
+  // Fallback: first plan for the type
+  return plans[0]
 }
