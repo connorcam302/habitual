@@ -33,7 +33,7 @@ export default function WeekView({ currentWeek, sessions, officeDays, onUpdateSe
   return (
     <>
       <div
-        className="md:grid md:gap-x-6 md:px-6 md:pt-6 md:items-start"
+        className="pt-3 md:grid md:gap-x-6 md:px-6 md:pt-6 md:items-start"
         style={{ gridTemplateColumns: '1fr 260px' }}
       >
         {/* Session list */}
@@ -44,9 +44,9 @@ export default function WeekView({ currentWeek, sessions, officeDays, onUpdateSe
             const dateStr = dateForDay(currentWeek, day)
 
             return (
-              <div key={day} className="mb-6 md:mb-5">
+              <div key={day} className="mb-5">
                 {/* Day header */}
-                <div className="flex items-center gap-2.5 px-4 mb-2.5 md:px-1">
+                <div className="flex items-center gap-2.5 px-4 mb-2 md:px-1">
                   <span
                     className={`font-mono text-[11px] font-medium tracking-[0.1em] uppercase
                       ${isToday ? 'text-app-text' : 'text-text-muted'}`}
@@ -69,11 +69,10 @@ export default function WeekView({ currentWeek, sessions, officeDays, onUpdateSe
 
                 {/* Sessions or rest day */}
                 {daySessions.length === 0 ? (
-                  <div
-                    className="mx-3 mb-2 py-2.5 px-3.5 rounded-xl border border-dashed border-app-border
-                      text-sm text-text-dim md:mx-0"
-                  >
-                    Rest day
+                  <div className="mx-4 mb-1 flex items-center gap-3 md:mx-1">
+                    <div className="h-px flex-1 border-t border-dashed border-app-border" />
+                    <span className="font-mono text-[10px] tracking-[0.15em] uppercase text-text-dim shrink-0">rest</span>
+                    <div className="h-px flex-1 border-t border-dashed border-app-border" />
                   </div>
                 ) : (
                   daySessions.map(s => (

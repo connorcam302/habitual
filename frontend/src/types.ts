@@ -35,7 +35,9 @@ export interface Stats {
   cancelled: number
   skipped: number
   weeks_tracked: number
-  most_injured_type: string | null
+  avg_per_week: number
+  by_type: Partial<Record<SessionType, { done: number; injured: number; total: number }>>
+  felt_dist: Partial<Record<FeltRating, number>>
 }
 
 export interface DiffChange {

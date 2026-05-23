@@ -78,7 +78,16 @@ export default function SessionModal({ session, onClose, onUpdate }: Props) {
         >
           <div className="flex items-center gap-2.5 mb-1">
             <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: typeColor }} />
-            <span className="text-lg font-bold text-app-text leading-tight">{s.name}</span>
+            <span className="text-lg font-bold text-app-text leading-tight flex-1 min-w-0 truncate">{s.name}</span>
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="w-[36px] h-[36px] -mr-1 shrink-0 flex items-center justify-center rounded-full
+                text-text-dim hover:text-app-text hover:bg-surface-3 transition-colors
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-football"
+            >
+              <X size={18} />
+            </button>
           </div>
           <input
             type="text"
@@ -106,7 +115,7 @@ export default function SessionModal({ session, onClose, onUpdate }: Props) {
                 <StatusPill label="Pending" status="pending" current={s.status} onClick={() => setStatus('pending')} />
               </div>
             ) : (
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <StatusPill label="Done"      status="done"      current={s.status} onClick={() => setStatus('done')} />
                 <StatusPill label="Injured"   status="injured"   current={s.status} onClick={() => setStatus('injured')} />
                 <StatusPill label="Cancelled" status="cancelled" current={s.status} onClick={() => setStatus('cancelled')} />

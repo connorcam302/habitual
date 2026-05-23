@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { forwardRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Sparkles, Trash2 } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { formatWeekLabel } from '@/lib/utils'
@@ -15,10 +15,10 @@ interface Props {
   weekExists: boolean
 }
 
-export default function Header({
+const Header = forwardRef<HTMLElement, Props>(function Header({
   currentWeek, sessions, view,
   onNavigateWeek, onSwitchView, onOpenAIModal, onDeleteWeek, weekExists,
-}: Props) {
+}, ref) {
   const [confirming, setConfirming] = useState(false)
 
   const done  = sessions.filter(s => s.status === 'done').length
@@ -27,6 +27,7 @@ export default function Header({
 
   return (
     <header
+      ref={ref}
       className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-50
         bg-bg border-b border-app-border md:max-w-[1080px]"
       style={{ paddingTop: 'var(--safe-top)' }}
@@ -140,5 +141,7 @@ export default function Header({
       </div>
     </header>
   )
-}
+})
+
+export default Header
 

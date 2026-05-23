@@ -320,38 +320,65 @@ app.get('/api/weeks', async (req, res) => {
 // GET /api/stats
 app.get('/api/stats', async (req, res) => {
   try {
-    const totals = await pool.query(`
-      SELECT
-        COUNT(*)                                           AS total,
-        COUNT(*) FILTER (WHERE status = 'done')           AS done,
-        COUNT(*) FILTER (WHERE status = 'injured')        AS injured,
-        COUNT(*) FILTER (WHERE status = 'cancelled')      AS cancelled,
-        COUNT(*) FILTER (WHERE status = 'skipped')        AS skipped
-      FROM sessions
-    `);
-    const weekCount = await pool.query('SELECT COUNT(*) AS count FROM weeks');
-    const topInjured = await pool.query(`
-      SELECT type, COUNT(*) AS count
-      FROM sessions
-      WHERE status = 'injured'
-      GROUP BY type
-      ORDER BY count DESC
-      LIMIT 1
-    `);
+    const [totals, weekCount, byType, feltDist, avgWeek] = await Promise.all([
+      pool.query(`
+        SELECT
+          COUNT(*)                                           AS total,
+          COUNT(*) FILTER (WHERE status = 'done')           AS done,
+          COUNT(*) FILTER (WHERE status = 'injured')        AS injured,
+          COUNT(*) FILTER (WHERE status = 'cancelled')      AS cancelled,
+          COUNT(*) FILTER (WHERE status = 'skipped')        AS skipped
+        FROM sessions
+      `),
+      pool.query('SELECT COUNT(*) AS count FROM weeks'),
+      pool.query(`
+        SELECT
+          type,
+          COUNT(*) FILTER (WHERE status = 'done')             AS done,
+          COUNT(*) FILTER (WHERE status = 'injured')          AS injured,
+          COUNT(*) FILTER (WHERE status NOT IN ('cancelled')) AS total
+        FROM sessions
+        GROUP BY type
+      `),
+      pool.query(`
+        SELECT felt, COUNT(*)::int AS count
+        FROM sessions
+        WHERE felt IS NOT NULL
+        GROUP BY felt
+      `),
+      pool.query(`
+        SELECT COALESCE(ROUND(AVG(done_count)::numeric, 1), 0) AS avg
+        FROM (
+          SELECT COUNT(*) FILTER (WHERE status = 'done') AS done_count
+          FROM sessions
+          GROUP BY week_id
+        ) t
+      `),
+    ]);
 
     const { total, done, injured } = totals.rows[0];
     const totalInt = parseInt(total, 10);
     const doneInt  = parseInt(done, 10);
 
     res.json({
-      total_sessions:      totalInt,
-      completed:           doneInt,
-      completion_rate:     totalInt > 0 ? Math.round((doneInt / totalInt) * 100) : 0,
-      injured:             parseInt(injured, 10),
-      cancelled:           parseInt(totals.rows[0].cancelled, 10),
-      skipped:             parseInt(totals.rows[0].skipped, 10),
-      weeks_tracked:       parseInt(weekCount.rows[0].count, 10),
-      most_injured_type:   topInjured.rows[0]?.type ?? null,
+      total_sessions:  totalInt,
+      completed:       doneInt,
+      completion_rate: totalInt > 0 ? Math.round((doneInt / totalInt) * 100) : 0,
+      injured:         parseInt(injured, 10),
+      cancelled:       parseInt(totals.rows[0].cancelled, 10),
+      skipped:         parseInt(totals.rows[0].skipped, 10),
+      weeks_tracked:   parseInt(weekCount.rows[0].count, 10),
+      avg_per_week:    parseFloat(avgWeek.rows[0]?.avg ?? '0'),
+      by_type:         Object.fromEntries(
+        byType.rows.map(r => [r.type, {
+          done:    parseInt(r.done, 10),
+          injured: parseInt(r.injured, 10),
+          total:   parseInt(r.total, 10),
+        }])
+      ),
+      felt_dist: Object.fromEntries(
+        feltDist.rows.map(r => [r.felt, r.count])
+      ),
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -31,7 +31,7 @@
 
     --safe-top:    env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
-    --header-h:    120px;
+    --header-h:    116px;
 
     /* Gradients — warm red-to-gold, not cobalt-to-violet */
     --gradient:     linear-gradient(90deg,  #c1121f, #f5ae22);
@@ -81,6 +81,3 @@
   }
 }
 
-@media (min-width: 768px) {
-  :root { --header-h: 106px; }
-}

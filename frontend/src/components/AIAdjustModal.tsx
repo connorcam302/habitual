@@ -467,6 +467,7 @@ export default function AIAdjustModal({
   const [proposal, setProposal] = useState<Proposal | null>(null)
   const [aiMessage, setAiMessage] = useState('')
   const [applyError, setApplyError] = useState('')
+  const [proposeError, setProposeError] = useState('')
 
   // ── New-week helpers ──
 
@@ -503,6 +504,7 @@ export default function AIAdjustModal({
   const handlePropose = async () => {
     setPhase('loading')
     setApplyError('')
+    setProposeError('')
     try {
       const prompt = isNewWeek
         ? buildNewWeekPrompt(pickedOfficeDays, cancelledFootball, injury, notes)
@@ -518,13 +520,21 @@ export default function AIAdjustModal({
           messages: [{ role: 'user', content: prompt }],
         }),
       })
-      if (!res.ok) throw new Error()
       const data = await res.json()
+      if (!res.ok) {
+        console.error('[AI propose] server error:', data)
+        throw new Error(data.error ?? `Server error ${res.status}`)
+      }
+      if (!data.proposal) {
+        console.error('[AI propose] no proposal in response:', data)
+        throw new Error('No schedule was returned — please try again.')
+      }
       setAiMessage(data.message ?? '')
-      setProposal(data.proposal ?? null)
-      setPhase(data.proposal ? 'proposal' : 'form')
-    } catch {
+      setProposal(data.proposal)
+      setPhase('proposal')
+    } catch (err) {
       setPhase('form')
+      setProposeError(err instanceof Error ? err.message : 'Something went wrong — please try again.')
     }
   }
 
@@ -571,6 +581,7 @@ export default function AIAdjustModal({
     setProposal(null)
     setAiMessage('')
     setApplyError('')
+    setProposeError('')
     onClose()
   }
 
@@ -727,6 +738,9 @@ export default function AIAdjustModal({
                 />
               </div>
 
+              {proposeError && (
+                <p className="text-xs" style={{ color: 'var(--cancelled)' }}>{proposeError}</p>
+              )}
               <button
                 onClick={handlePropose}
                 className="w-full py-3 rounded-[10px] text-sm font-semibold font-display text-app-text hover:opacity-90 transition-opacity"
@@ -781,6 +795,9 @@ export default function AIAdjustModal({
                 />
               </div>
 
+              {proposeError && (
+                <p className="text-xs" style={{ color: 'var(--cancelled)' }}>{proposeError}</p>
+              )}
               <button
                 onClick={handlePropose}
                 disabled={!canProposeAdjust}

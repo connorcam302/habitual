@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { CalendarDays, BarChart3 } from 'lucide-react'
 import type { Session, Week, Stats } from './types'
 import { api } from './lib/api'
@@ -98,14 +98,24 @@ export default function App() {
     if (newOfficeDays !== undefined) setOfficeDays(newOfficeDays)
   }
 
-  const headerHeight = 'calc(var(--safe-top) + var(--header-h))'
-  const cssVars = { '--header-h': headerHeight } as React.CSSProperties
+  const headerRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const update = () =>
+      document.documentElement.style.setProperty('--header-h', `${Math.ceil(el.getBoundingClientRect().height)}px`)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   if (loading) return <LoadingScreen />
 
   return (
-    <div className="flex flex-col h-full" style={cssVars}>
+    <div className="flex flex-col h-full">
       <Header
+        ref={headerRef}
         currentWeek={currentWeek}
         sessions={sessions}
         view={view}
@@ -120,7 +130,7 @@ export default function App() {
       <main
         className="flex-1 md:max-w-[1080px] md:mx-auto md:w-full"
         style={{
-          paddingTop: headerHeight,
+          paddingTop: 'var(--header-h)',
           paddingBottom: `calc(72px + var(--safe-bottom))`,
           overflow: 'auto',
         }}

@@ -1,9 +1,25 @@
 import type { Week, Stats } from '@/types'
+import type { FeltRating } from '@/types'
 
 interface Props {
   weeks: Week[]
   stats: Stats | null
 }
+
+const TYPE_META = [
+  { key: 'football', label: 'Football', color: 'var(--football)' },
+  { key: 'strength', label: 'Strength', color: 'var(--strength)' },
+  { key: 'speed',    label: 'Speed',    color: 'var(--speed)'    },
+  { key: 'cardio',   label: 'Cardio',   color: 'var(--cardio)'   },
+  { key: 'chinese',  label: 'Chinese',  color: 'var(--chinese)'  },
+]
+
+const FELT_META: { key: FeltRating; label: string }[] = [
+  { key: 'great', label: 'Great' },
+  { key: 'good',  label: 'Good'  },
+  { key: 'okay',  label: 'Okay'  },
+  { key: 'tough', label: 'Tough' },
+]
 
 function toInt(v: string | number | undefined): number {
   return parseInt(String(v ?? 0), 10) || 0
@@ -29,45 +45,129 @@ export default function HistoryView({ weeks, stats }: Props) {
     )
   }
 
-  return (
-    <div>
-      {/* Section label */}
-      <div className="font-mono text-[11px] tracking-[0.1em] text-text-dim uppercase px-4 pt-4 pb-2 md:px-6 md:pt-6">
-        All Time
-      </div>
+  const feltTotal = Object.values(stats.felt_dist).reduce((sum, n) => sum + (n ?? 0), 0)
+  const feltMax   = Math.max(...Object.values(stats.felt_dist).map(n => n ?? 0), 1)
 
-      {/* Stats grid */}
+  const activeTypes = TYPE_META.filter(({ key }) => {
+    const t = stats.by_type[key as keyof typeof stats.by_type]
+    return t && t.total > 0
+  })
+
+  return (
+    <div className="pt-1">
+      {/* ── All-time stats ── */}
+      <SectionLabel>All Time</SectionLabel>
+
       <div className="grid grid-cols-2 gap-2.5 px-4 pb-4 md:grid-cols-4 md:px-6">
-        <StatCard value={`${stats.completion_rate}%`} label="Completion rate" valueColor={completionColor(stats.completion_rate)} />
-        <StatCard value={String(stats.weeks_tracked)} label="Weeks tracked" />
-        <StatCard value={String(stats.completed)} label="Sessions done" />
         <StatCard
-          value={String(stats.injured)}
-          label={
-            stats.most_injured_type
-              ? `Injured\n${stats.most_injured_type}`
-              : 'Injured'
-          }
-          valueColor="var(--injured)"
+          value={`${stats.completion_rate}%`}
+          label="Completion rate"
+          valueColor={completionColor(stats.completion_rate)}
+        />
+        <StatCard value={String(stats.completed)}    label="Sessions done" />
+        <StatCard value={String(stats.weeks_tracked)} label="Weeks tracked" />
+        <StatCard
+          value={stats.avg_per_week % 1 === 0
+            ? String(stats.avg_per_week)
+            : stats.avg_per_week.toFixed(1)}
+          label="Avg per week"
         />
       </div>
 
-      {/* Week list */}
+      {/* ── By type ── */}
+      {activeTypes.length > 0 && (
+        <>
+          <SectionLabel>By Type</SectionLabel>
+          <div className="mx-3 mb-4 bg-surface border border-app-border rounded-[14px] p-4 md:mx-6">
+            {activeTypes.map(({ key, label, color }) => {
+              const t = stats.by_type[key as keyof typeof stats.by_type]!
+              const pct = t.total > 0 ? Math.round((t.done / t.total) * 100) : 0
+              return (
+                <div key={key} className="mb-3.5 last:mb-0">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: color }} />
+                    <span className="text-sm font-medium text-app-text flex-1">{label}</span>
+                    {t.injured > 0 && (
+                      <span
+                        className="font-mono text-[10px] px-1.5 py-0.5 rounded-full"
+                        style={{
+                          background: 'color-mix(in oklch, var(--injured) 10%, transparent)',
+                          color: 'var(--injured)',
+                        }}
+                      >
+                        {t.injured} injured
+                      </span>
+                    )}
+                    <span className="font-mono text-[11px] text-text-muted tabular-nums">
+                      {t.done}/{t.total}
+                    </span>
+                    <span
+                      className="font-mono text-[11px] w-8 text-right tabular-nums"
+                      style={{ color: completionColor(pct) }}
+                    >
+                      {pct}%
+                    </span>
+                  </div>
+                  <div className="h-[3px] bg-app-border rounded-sm overflow-hidden">
+                    <div
+                      className="h-full rounded-sm transition-[width] duration-[400ms]"
+                      style={{ background: color, width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
+
+      {/* ── Felt quality ── */}
+      {feltTotal >= 3 && (
+        <>
+          <SectionLabel>How It Felt</SectionLabel>
+          <div className="mx-3 mb-4 bg-surface border border-app-border rounded-[14px] p-4 md:mx-6">
+            {FELT_META.map(({ key, label }) => {
+              const count = stats.felt_dist[key] ?? 0
+              const barW  = feltMax > 0 ? Math.round((count / feltMax) * 100) : 0
+              return (
+                <div key={key} className="flex items-center gap-3 mb-2.5 last:mb-0">
+                  <span className="font-mono text-[11px] text-text-muted w-9 shrink-0">{label}</span>
+                  <div className="flex-1 h-[3px] bg-app-border rounded-sm overflow-hidden">
+                    <div
+                      className="h-full rounded-sm bg-strength transition-[width] duration-[400ms]"
+                      style={{ width: `${barW}%` }}
+                    />
+                  </div>
+                  <span className="font-mono text-[11px] text-text-dim w-4 text-right tabular-nums">
+                    {count}
+                  </span>
+                </div>
+              )
+            })}
+            <div className="mt-3 pt-3 border-t border-app-border">
+              <span className="font-mono text-[10px] text-text-dim">
+                {feltTotal} of {stats.completed} sessions rated
+              </span>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Past weeks ── */}
       {weeks.length > 0 ? (
         <>
-          <div className="font-mono text-[11px] tracking-[0.1em] text-text-dim uppercase px-4 pt-2 pb-2 md:px-6">
-            Past Weeks
-          </div>
+          <SectionLabel>Past Weeks</SectionLabel>
           <div className="md:grid md:grid-cols-2 md:gap-2.5 md:px-6 md:pb-6">
             {weeks.map(w => {
-              const total  = toInt(w.total)
-              const done   = toInt(w.done)
+              const total     = toInt(w.total)
+              const done      = toInt(w.done)
               const injured   = toInt(w.injured)
               const cancelled = toInt(w.cancelled)
               const skipped   = toInt(w.skipped)
               const pct = total > 0 ? Math.round((done / total) * 100) : 0
 
-              const mon = new Date(w.week_start + 'T00:00:00')
+              const dateStr = String(w.week_start).slice(0, 10)
+              const mon = new Date(dateStr + 'T00:00:00')
               const sun = new Date(mon)
               sun.setDate(mon.getDate() + 6)
               const label = `${mon.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – ${sun.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
@@ -104,17 +204,21 @@ export default function HistoryView({ weeks, stats }: Props) {
   )
 }
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="font-mono text-[11px] tracking-[0.1em] text-text-dim uppercase px-4 pt-4 pb-2 md:px-6">
+      {children}
+    </div>
+  )
+}
+
 function StatCard({ value, label, valueColor }: { value: string; label: string; valueColor?: string }) {
-  const lines = label.split('\n')
   return (
     <div className="bg-surface border border-app-border rounded-[14px] p-3.5">
       <div className="font-mono text-[28px] font-bold leading-none" style={{ color: valueColor ?? 'var(--text)' }}>
         {value}
       </div>
-      <div className="text-xs text-text-muted mt-1">
-        {lines[0]}
-        {lines[1] && <><br /><span className="text-[11px] opacity-70">{lines[1]}</span></>}
-      </div>
+      <div className="text-xs text-text-muted mt-1">{label}</div>
     </div>
   )
 }

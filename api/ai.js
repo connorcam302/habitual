@@ -167,13 +167,20 @@ module.exports = function createAIRouter(pool) {
         max_tokens: 1024,
         system: systemWithContext,
         tools,
+        tool_choice: { type: 'tool', name: 'propose_changes' },
         messages: history,
       });
+
+      if (response.stop_reason !== 'tool_use') {
+        const raw = JSON.stringify(response.content);
+        console.error('[AI chat] Expected tool_use but got stop_reason=%s content=%s', response.stop_reason, raw);
+        return res.status(500).json({ error: 'No schedule proposal returned from AI.' });
+      }
 
       let text = '';
       let proposal = null;
 
-      if (response.stop_reason === 'tool_use') {
+      {
         const toolBlock = response.content.find(b => b.type === 'tool_use' && b.name === 'propose_changes');
         if (toolBlock) {
           proposal = { ...toolBlock.input };
@@ -215,8 +222,6 @@ module.exports = function createAIRouter(pool) {
         });
 
         text = continuation.content.filter(b => b.type === 'text').map(b => b.text).join('');
-      } else {
-        text = response.content.filter(b => b.type === 'text').map(b => b.text).join('');
       }
 
       res.json({ message: text, proposal });
