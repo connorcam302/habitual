@@ -92,17 +92,18 @@ export default function SessionModal({ session, onClose, onUpdate }: Props) {
               <X size={18} />
             </button>
           </div>
+          <label className="block ml-5 text-[10px] font-semibold text-text-dim">{t('Session time')}
           <input
             type="text"
             defaultValue={s.time_slot ?? ''}
             placeholder={t('Add time')}
-            aria-label="Edit time slot"
             onBlur={handleTimeBlur}
-            className="bg-transparent border-none outline-none w-full p-0 m-0 ml-5
+            className="bg-transparent border-none outline-none w-full p-0 m-0 mt-1
               font-mono text-[11px] tracking-[0.1em] text-text-dim
               placeholder:text-text-dim placeholder:opacity-40
               focus:text-text-muted caret-football cursor-text"
           />
+          </label>
         </div>
 
         {/* Scrollable body */}
@@ -153,6 +154,7 @@ export default function SessionModal({ session, onClose, onUpdate }: Props) {
           <div>
             <SectionLabel>{t('Notes')}</SectionLabel>
             <textarea
+              aria-label={t('Notes')}
               value={s.notes ?? ''}
               placeholder={t('Add a note…')}
               rows={2}

@@ -59,6 +59,10 @@ const zh: Record<string, string> = {
   'Anything else affecting this week': '其他会影响本周安排的情况', 'Propose changes': '建议调整',
   'No schedule was returned. Please try again.': '未生成计划，请重试。', 'Something went wrong. Please try again.': '出现问题，请重试。',
   'Failed to apply. Please try again.': '应用失败，请重试。',
+  Priority: '优先级', Category: '类别', Activity: '活动', Day: '星期', 'Start time': '开始时间',
+  'End time': '结束时间', 'Duration minutes': '时长（分钟）', Remove: '删除', Severity: '严重程度',
+  'Injury notes': '受伤备注', 'New user language': '新用户语言', 'Session time': '活动时间',
+  'Adjust week with AI': '使用 AI 调整本周', 'Delete this week': '删除本周',
 }
 
 export function translate(locale: Locale, value: string) {

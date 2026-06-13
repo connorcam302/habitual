@@ -107,7 +107,7 @@ const Header = forwardRef<HTMLElement, Props>(function Header({
                 <>
                   <button
                     onClick={onOpenAIModal}
-                    aria-label="Adjust week with AI"
+                    aria-label={t('Adjust week with AI')}
                     className="h-[34px] px-2.5 rounded-full inline-flex items-center gap-1.5 shrink-0
                       border border-app-border bg-surface-2 hover:bg-surface-3
                       text-xs font-semibold font-display text-text-muted hover:text-app-text
@@ -118,7 +118,7 @@ const Header = forwardRef<HTMLElement, Props>(function Header({
                   </button>
                   <button
                     onClick={() => setConfirming(true)}
-                    aria-label="Delete this week"
+                    aria-label={t('Delete this week')}
                     className="h-[34px] w-[34px] inline-flex items-center justify-center rounded-full
                       text-text-dim hover:text-cancelled hover:bg-surface-2
                       transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-football"

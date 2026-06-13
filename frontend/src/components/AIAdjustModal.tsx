@@ -213,18 +213,21 @@ function InjuryFields({
   const { t } = useI18n()
   return (
     <div className="space-y-2.5">
+      <label className="block text-[11px] font-semibold text-text-muted">{t('Injury body part')}
       <select
-        aria-label={t('Injury body part')}
         value={injury.bodyPart}
         onChange={e => onChange({ bodyPart: e.target.value })}
-        className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text focus:outline-none focus:ring-1 focus:ring-football"
+        className="mt-1.5 w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text focus:outline-none focus:ring-1 focus:ring-football"
       >
         {BODY_PARTS.map(b => (
           <option key={b.value} value={b.value}>{t(b.label)}</option>
         ))}
       </select>
+      </label>
 
-      <div className="flex gap-1.5">
+      <div role="group" aria-label={t('Severity')}>
+        <div className="text-[11px] font-semibold text-text-muted mb-1.5">{t('Severity')}</div>
+        <div className="flex gap-1.5">
         {SEVERITIES.map(sv => (
           <button
             key={sv.value}
@@ -238,15 +241,17 @@ function InjuryFields({
               {t(sv.label)}
           </button>
         ))}
+        </div>
       </div>
 
+      <label className="block text-[11px] font-semibold text-text-muted">{t('Injury notes')}
       <input
         type="text"
-        placeholder={t('Notes (optional)')}
         value={injury.notes}
         onChange={e => onChange({ notes: e.target.value })}
-        className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
+        className="mt-1.5 w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
       />
+      </label>
     </div>
   )
 }
@@ -406,13 +411,14 @@ function AdjustableSessionRow({
           </div>
 
           {info.type === 'cancelled' ? (
+            <label className="block text-[11px] font-semibold text-text-muted">{tr('Reason (optional)')}
             <input
               type="text"
-              placeholder={tr('Reason (optional)')}
               value={info.reason}
               onChange={e => onUpdate({ reason: e.target.value })}
-              className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
+              className="mt-1.5 w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
             />
+            </label>
           ) : (
             <InjuryFields
               injury={{ active: true, bodyPart: info.bodyPart, severity: info.severity, notes: info.reason }}
@@ -652,8 +658,8 @@ export default function AIAdjustModal({
                           <div className="text-[11px] text-text-dim">{t(commitment.day[0].toUpperCase() + commitment.day.slice(1))} · {commitment.start_time}</div></div>
                         <span className="text-[11px] font-semibold" style={{ color: skipped ? 'var(--text-dim)' : 'var(--done)' }}>{t(skipped ? 'off' : 'on')}</span>
                       </button>
-                      {skipped && <input value={skippedCommitments[key]} onChange={e => setSkippedCommitments(prev => ({ ...prev, [key]: e.target.value }))}
-                        placeholder={t('Reason (optional)')} className="mt-1.5 field w-full" />}
+                      {skipped && <label className="block mt-1.5 text-[11px] font-semibold text-text-muted">{t('Reason (optional)')}<input value={skippedCommitments[key]} onChange={e => setSkippedCommitments(prev => ({ ...prev, [key]: e.target.value }))}
+                        className="mt-1.5 field w-full" /></label>}
                     </div>
                   })}
                 </div>
@@ -691,6 +697,7 @@ export default function AIAdjustModal({
               <div>
                 <SectionLabel>{t('Anything else?')}</SectionLabel>
                 <textarea
+                  aria-label={t('Anything else?')}
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
                   placeholder={t('For example, busy Tuesday evening or travelling Friday')}
@@ -748,6 +755,7 @@ export default function AIAdjustModal({
               <div>
                 <SectionLabel>{t('Additional context')}</SectionLabel>
                 <textarea
+                  aria-label={t('Additional context')}
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
                   placeholder={t('Anything else affecting this week')}

@@ -51,11 +51,23 @@ export default function SettingsModal({ open, user, onClose, onUser, onLogout, o
         {user.is_owner && <div>
           <button onClick={() => setAdding(v => !v)} className="text-sm font-semibold text-app-text">{t('Add person')}</button>
           {adding && <form onSubmit={addPerson} className="mt-3 space-y-2">
-            {(['display_name', 'username', 'password'] as const).map(key =>
-              <input key={key} required minLength={key === 'password' ? 8 : 1} type={key === 'password' ? 'password' : 'text'}
-                placeholder={t(key === 'display_name' ? 'Name' : key === 'username' ? 'Username' : 'Password')}
+            {(['display_name', 'username', 'password'] as const).map(key => {
+              const label = t(key === 'display_name' ? 'Name' : key === 'username' ? 'Username' : 'Password')
+              return <label key={key} className="block text-xs font-semibold text-text-muted">{label}
+              <input required minLength={key === 'password' ? 8 : 1} type={key === 'password' ? 'password' : 'text'}
                 value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })}
-                className="w-full rounded-[10px] bg-surface-3 border border-app-border px-3 py-2.5 text-sm text-app-text" />)}
+                className="mt-1.5 w-full rounded-[10px] bg-surface-3 border border-app-border px-3 py-2.5 text-sm text-app-text" /></label>})}
+            <div>
+              <div className="text-xs font-semibold text-text-muted mb-1.5">{t('New user language')}</div>
+              <div className="grid grid-cols-2 gap-2">
+                {([['en', 'English'], ['zh-CN', 'Simplified Chinese']] as const).map(([locale, label]) =>
+                  <button type="button" key={locale} onClick={() => setForm({ ...form, locale })}
+                    className="py-2 rounded-[10px] border text-xs font-semibold"
+                    style={form.locale === locale ? { borderColor: 'var(--football)', color: 'var(--football)' } : { borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+                    {t(label)}
+                  </button>)}
+              </div>
+            </div>
             <button className="w-full py-2.5 rounded-[10px] font-semibold text-app-text" style={{ background: 'var(--gradient-cta)' }}>{t('Create account')}</button>
           </form>}
           {message && <div className="mt-2 text-xs text-text-muted">{message}</div>}

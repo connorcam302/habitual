@@ -42,13 +42,16 @@ export default function AuthScreen({ needsSetup, onAuthenticated }: {
           <Field label={t('Username')} value={username} onChange={setUsername} autoComplete="username" />
           <Field label={t('Password')} value={password} onChange={setPassword} type="password" autoComplete={needsSetup ? 'new-password' : 'current-password'} />
         </div>
-        <div className="grid grid-cols-2 gap-2 mt-3">
-          {([['en', 'English'], ['zh-CN', 'Simplified Chinese']] as const).map(([value, label]) =>
-            <button type="button" key={value} onClick={() => setLocale(value)}
-              className="py-2 rounded-[10px] border text-xs font-semibold"
-              style={locale === value ? { borderColor: 'var(--football)', color: 'var(--football)' } : { borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-              {translate(locale, label)}
-            </button>)}
+        <div className="mt-3">
+          <div className="text-xs font-semibold text-text-muted mb-1.5">{t('Language')}</div>
+          <div className="grid grid-cols-2 gap-2">
+            {([['en', 'English'], ['zh-CN', 'Simplified Chinese']] as const).map(([value, label]) =>
+              <button type="button" key={value} onClick={() => setLocale(value)}
+                className="py-2 rounded-[10px] border text-xs font-semibold"
+                style={locale === value ? { borderColor: 'var(--football)', color: 'var(--football)' } : { borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
+                {translate(locale, label)}
+              </button>)}
+          </div>
         </div>
         {error && <p className="text-sm mt-3" style={{ color: 'var(--cancelled)' }}>{error}</p>}
         <button disabled={busy} className="w-full mt-5 py-3 rounded-[10px] font-semibold text-app-text disabled:opacity-50" style={{ background: 'var(--gradient-cta)' }}>
