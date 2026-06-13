@@ -68,7 +68,7 @@ export default function SettingsModal({ open, user, onClose, onUser, onLogout, o
                   </button>)}
               </div>
             </div>
-            <button className="w-full py-2.5 rounded-[10px] font-semibold text-app-text" style={{ background: 'var(--gradient-cta)' }}>{t('Create account')}</button>
+            <button type="submit" className="sticky bottom-0 w-full py-2.5 rounded-[10px] font-semibold text-app-text" style={{ background: 'var(--gradient-cta)' }}>{t('Create account')}</button>
           </form>}
           {message && <div className="mt-2 text-xs text-text-muted">{message}</div>}
         </div>}

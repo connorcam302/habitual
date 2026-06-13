@@ -44,10 +44,10 @@ export default function ProfileEditor({ required = false, onSaved, onCancel }: {
     finally { setSaving(false) }
   }
   const listText = (key: 'equipment' | 'limitations' | 'disliked_activities', value: string) =>
-    setProfile({ ...profile, [key]: value.split('\n').map(item => item.trim()).filter(Boolean) })
+    setProfile({ ...profile, [key]: value.split('\n') })
 
   if (loading) return <div className="p-8 text-center text-text-muted">{t('Loading profile…')}</div>
-  return <div className={required ? 'min-h-full overflow-y-auto px-4 py-6' : ''}>
+  return <div className={required ? 'h-full overflow-y-auto px-4 pt-6' : ''}>
     <div className={required ? 'max-w-2xl mx-auto' : ''}>
       {required && <><div className="font-mono text-[11px] tracking-[0.2em] text-text-muted mb-4">HABITUAL</div>
         <h1 className="text-2xl font-bold">{t('Build your profile')}</h1>
@@ -108,9 +108,9 @@ export default function ProfileEditor({ required = false, onSaved, onCancel }: {
         <FieldLabel label={t('Anything else the planner should know')}><textarea value={profile.notes} onChange={e => setProfile({ ...profile, notes: e.target.value })} rows={3} className="field w-full" /></FieldLabel>
       </Section>
       {error && <p className="text-sm mb-3" style={{ color: 'var(--cancelled)' }}>{error}</p>}
-      <div className="flex gap-2 pb-8">
-        {onCancel && <button onClick={onCancel} className="flex-1 py-3 rounded-[10px] border border-app-border text-text-muted">{t('Cancel')}</button>}
-        <button onClick={save} disabled={saving} className="flex-[2] py-3 rounded-[10px] font-semibold text-app-text disabled:opacity-50" style={{ background: 'var(--gradient-cta)' }}>{saving ? t('Saving…') : t('Save profile')}</button>
+      <div className={`sticky bottom-0 z-10 flex gap-2 py-4 border-t border-app-border bg-bg/95 backdrop-blur-sm ${required ? 'pb-[calc(1rem+var(--safe-bottom))]' : ''}`}>
+        {onCancel && <button type="button" onClick={onCancel} className="flex-1 py-3 rounded-[10px] border border-app-border text-text-muted">{t('Cancel')}</button>}
+        <button type="button" onClick={save} disabled={saving} className="flex-[2] py-3 rounded-[10px] font-semibold text-app-text disabled:opacity-50" style={{ background: 'var(--gradient-cta)' }}>{saving ? t('Saving…') : t('Save profile')}</button>
       </div>
     </div>
   </div>
@@ -128,10 +128,10 @@ function Section({ title, hint, children }: { title: string; hint: string; child
 }
 function Row({ children, onRemove }: { children: React.ReactNode; onRemove: () => void }) {
   const { t } = useI18n()
-  return <div className="relative grid grid-cols-2 gap-3 p-3 pr-10 rounded-[12px] bg-surface border border-app-border">{children}<button onClick={onRemove} aria-label={t('Remove')} className="absolute right-2 top-2 p-2 text-text-dim"><Trash2 size={14} /></button></div>
+  return <div className="relative grid grid-cols-2 gap-3 p-3 pr-10 rounded-[12px] bg-surface border border-app-border">{children}<button type="button" onClick={onRemove} aria-label={t('Remove')} className="absolute right-2 top-2 p-2 text-text-dim"><Trash2 size={14} /></button></div>
 }
 function Add({ label, onClick }: { label: string; onClick: () => void }) {
-  return <button onClick={onClick} className="w-full py-2.5 rounded-[10px] border border-dashed border-app-border text-sm text-text-muted inline-flex justify-center items-center gap-2"><Plus size={14} />{label}</button>
+  return <button type="button" onClick={onClick} className="w-full py-2.5 rounded-[10px] border border-dashed border-app-border text-sm text-text-muted inline-flex justify-center items-center gap-2"><Plus size={14} />{label}</button>
 }
 function FieldLabel({ label, wide = false, children }: { label: string; wide?: boolean; children: React.ReactNode }) {
   return <label className={`${wide ? 'col-span-2' : ''} block min-w-0 text-[11px] font-semibold text-text-muted`}>

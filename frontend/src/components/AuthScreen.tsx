@@ -32,7 +32,7 @@ export default function AuthScreen({ needsSetup, onAuthenticated }: {
   }
 
   return (
-    <main className="min-h-full grid place-items-center px-5 py-10">
+    <main className="h-full overflow-y-auto grid items-start sm:items-center justify-items-center px-5 pt-5 pb-[calc(1.25rem+var(--safe-bottom))] sm:py-10">
       <form onSubmit={submit} className="w-full max-w-sm bg-surface border border-app-border rounded-[20px] p-6">
         <div className="font-mono text-[11px] tracking-[0.2em] text-text-muted mb-5">HABITUAL</div>
         <h1 className="text-xl font-bold text-app-text mb-1">{t(needsSetup ? 'Welcome to Habitual' : 'Sign in')}</h1>
@@ -54,9 +54,11 @@ export default function AuthScreen({ needsSetup, onAuthenticated }: {
           </div>
         </div>
         {error && <p className="text-sm mt-3" style={{ color: 'var(--cancelled)' }}>{error}</p>}
-        <button disabled={busy} className="w-full mt-5 py-3 rounded-[10px] font-semibold text-app-text disabled:opacity-50" style={{ background: 'var(--gradient-cta)' }}>
-          {busy ? '…' : t(needsSetup ? 'Create owner account' : 'Sign in')}
-        </button>
+        <div className="sticky bottom-0 -mx-2 mt-3 px-2 pt-2 pb-1 bg-surface/95 backdrop-blur-sm">
+          <button type="submit" disabled={busy} className="w-full py-3 rounded-[10px] font-semibold text-app-text disabled:opacity-50" style={{ background: 'var(--gradient-cta)' }}>
+            {busy ? '…' : t(needsSetup ? 'Create owner account' : 'Sign in')}
+          </button>
+        </div>
       </form>
     </main>
   )
