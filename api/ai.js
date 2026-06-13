@@ -1,308 +1,236 @@
 const Anthropic = require('@anthropic-ai/sdk');
+const { CATEGORIES, DAYS } = require('./profile');
 
-const SYSTEM = `You are a concise schedule assistant for Habitual, a personal weekly habit tracker.
+const SYSTEM = `You are the weekly planning assistant for Habitual.
 
-The user tracks these recurring sessions each week:
-- Football: 5-a-side (Tue & Thu 20:00–21:00), ball mastery drills (Wed), 11-a-side match (Sun 10:30)
-- Strength: lower body + speed block (Mon), upper body & core (Wed, WFH days only)
-- Speed: dynamic warmup + sprint & plyo block (Mon)
-- Cardio: Zone 2 jog (Wed)
-- Chinese: Anki review ~10 min (nightly), Pimsleur (commute only on office days Wed/Thu/Fri)
+Build plans from the authenticated user's profile, not from generic defaults. Their recurring commitments are anchors. Work toward higher-priority goals and target frequencies using preferred activities and availability windows. Adapt volume using recent completion and felt ratings. Respect equipment, limitations, disliked activities, office days, injuries, cancellations, and temporary notes.
 
-Office day rules:
-- Exercise sessions shift to evening slots when in the office
-- Pimsleur commute sessions only appear on office days (Wed, Thu, Fri)
-- Upper body & core on Wednesday is WFH-only (skipped on office Wednesdays)
+For a new week, session_updates must be empty and new_sessions must contain the complete plan. For an existing week, preserve unaffected sessions and only propose necessary updates or additions. Each new session needs a concise actionable brief. Never invent detailed medical advice. Always use propose_changes so the user reviews the plan before it is saved.`;
 
-Session statuses: pending, done, injured, cancelled, skipped
-Physical sessions also track feeling: great, good, okay, tough
-
-━━━ CANCELLATION RULES ━━━
-When a session or event is cancelled (not due to injury):
-1. Mark the cancelled session(s) with status "cancelled"
-2. Propose replacement sessions in the freed time using new_sessions — e.g. Sunday match
-   cancelled → add extra ball mastery or cardio; 5-a-side cancelled → add strength or cardio.
-   Use realistic times that fit the day. Always schedule something unless the user says otherwise.
-
-━━━ INJURY RULES ━━━
-When the user reports an injury, think carefully about what it affects:
-
-• Ankle / knee / foot:  no football, no speed, no cardio (running). Upper body strength and
-  Chinese are fine. Suggest upper body strength as a replacement session if any football slots
-  are freed.
-
-• Shoulder / arm / wrist:  no upper body strength; football may be possible at low intensity
-  (check with user). Lower body strength, cardio, Chinese are fine.
-
-• Back / spine:  no strength training, no speed. Light walking-pace cardio may be ok but check.
-  Chinese study is fine. Do not replace with heavy exercise.
-
-• Hip / groin:  no football, no speed, no lower body strength. Upper body strength and cardio
-  (cycling-style, not running) may be ok. Chinese fine.
-
-• General illness / fatigue:  cancel ALL physical sessions. Keep Chinese study.
-
-For injuries:
-1. Mark affected sessions "injured"
-2. Mark collateral sessions that would aggravate the injury "cancelled"
-3. Keep all sessions that are genuinely safe
-4. Do NOT add new_sessions — rest is part of recovery. The one exception is if the injury
-   clearly frees a slot and an unaffected session type fits (e.g. ankle injury frees Sunday
-   morning → propose upper body strength if the user has equipment available).
-
-━━━ NEW WEEK PLANNING ━━━
-When the current sessions list is empty, you are planning a brand-new week from scratch.
-Rules:
-• session_updates must be [] — no existing sessions to change
-• Put the COMPLETE week schedule in new_sessions
-• Do NOT include cancelled football sessions — omit them entirely and replace with fitness
-• Replacement sessions go in the same time slot as the omitted session (e.g. cancelled 5-a-side
-  at 20:00–21:00 → Zone 2 jog or strength session at 20:00–21:00)
-• You MAY add sessions not in the default template if they make sense as replacements
-• Respect injury rules — omit unsafe sessions, keep safe ones, use the freed slot if appropriate
-
-Default session template to adapt:
-  Mon  | Dynamic warmup        | WFH 7:30–7:50   / office 18:30–18:45
-  Mon  | Sprint & plyo block   | WFH 7:50–8:10   / office 18:45–19:05
-  Mon  | Lower body strength   | WFH 8:10–8:40   / office 19:05–19:30
-  Mon  | Anki                  | 21:30–21:40 (always)
-  Tue  | 5-a-side football     | 19:00–20:00 (unless cancelled)
-  Tue  | Anki                  | 21:30–21:40 (always)
-  Wed  | Upper body & core     | WFH 7:00–8:00 ONLY — omit on office Wednesdays
-  Wed  | Pimsleur (commute)    | office days only
-  Wed  | Zone 2 jog            | WFH 19:30–20:00 / office 19:00–19:30
-  Wed  | Ball mastery drills   | WFH 20:00–20:30 / office 19:30–20:00
-  Thu  | Pimsleur (commute)    | office days only
-  Thu  | 5-a-side football     | 20:00–21:00 (unless cancelled)
-  Thu  | Anki                  | 21:30–21:40 (always)
-  Fri  | Pimsleur (commute)    | office days only
-  Sun  | 11-a-side match       | 10:30 (unless cancelled)
-
-Always use propose_changes so the user can review before anything is saved.
-Be brief — one or two sentences max. The UI shows the full details.`;
-
-const tools = [
-  {
-    name: 'propose_changes',
-    description: 'Propose schedule changes for the user to review and confirm before anything is saved.',
-    input_schema: {
-      type: 'object',
-      required: ['summary', 'session_updates'],
-      properties: {
-        summary: {
-          type: 'string',
-          description: 'One sentence explaining what is changing and why.',
-        },
-        office_days: {
-          type: 'array',
-          items: { type: 'string', enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] },
-          description: 'New office days for the week. Only include if office days are changing.',
-        },
-        session_updates: {
-          type: 'array',
-          description: 'Changes to existing sessions.',
-          items: {
-            type: 'object',
-            required: ['session_id'],
-            properties: {
-              session_id: { type: 'integer' },
-              status:     { type: 'string', enum: ['pending', 'done', 'injured', 'cancelled', 'skipped'] },
-              time_slot:  { type: 'string' },
-              notes:      { type: 'string' },
-            },
+const tools = [{
+  name: 'propose_changes',
+  description: 'Propose personalized weekly schedule changes for review.',
+  input_schema: {
+    type: 'object',
+    required: ['summary', 'session_updates', 'new_sessions'],
+    properties: {
+      summary: { type: 'string' },
+      office_days: {
+        type: 'array',
+        items: { type: 'string', enum: [...DAYS].filter(day => day !== 'saturday' && day !== 'sunday') },
+      },
+      session_updates: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['session_id'],
+          properties: {
+            session_id: { type: 'integer' },
+            status: { type: 'string', enum: ['pending', 'done', 'injured', 'cancelled', 'skipped'] },
+            time_slot: { type: 'string' },
+            notes: { type: 'string' },
+            brief: { type: 'string' },
           },
         },
-        new_sessions: {
-          type: 'array',
-          description: 'Extra sessions to add. Use for cancellation replacements only — NOT for injuries.',
-          items: {
-            type: 'object',
-            required: ['day', 'type', 'name'],
-            properties: {
-              day:       { type: 'string', enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] },
-              type:      { type: 'string', enum: ['football', 'strength', 'speed', 'cardio', 'chinese'] },
-              name:      { type: 'string', description: 'Short descriptive name, e.g. "Extra Zone 2 jog"' },
-              time_slot: { type: 'string', description: 'e.g. "10:30 – 11:15"' },
-            },
+      },
+      new_sessions: {
+        type: 'array',
+        items: {
+          type: 'object',
+          required: ['day', 'category', 'name', 'time_slot', 'brief'],
+          properties: {
+            day: { type: 'string', enum: [...DAYS] },
+            category: { type: 'string', enum: [...CATEGORIES] },
+            name: { type: 'string' },
+            time_slot: { type: 'string' },
+            brief: { type: 'string' },
           },
         },
       },
     },
   },
-];
+}];
 
 const DAY_ORDER_SQL = `CASE day
-  WHEN 'monday'    THEN 1 WHEN 'tuesday'   THEN 2 WHEN 'wednesday' THEN 3
-  WHEN 'thursday'  THEN 4 WHEN 'friday'    THEN 5 WHEN 'saturday'  THEN 6
-  WHEN 'sunday'    THEN 7 ELSE 8 END`;
+  WHEN 'monday' THEN 1 WHEN 'tuesday' THEN 2 WHEN 'wednesday' THEN 3
+  WHEN 'thursday' THEN 4 WHEN 'friday' THEN 5 WHEN 'saturday' THEN 6
+  WHEN 'sunday' THEN 7 ELSE 8 END`;
+const STATUSES = new Set(['pending', 'done', 'injured', 'cancelled', 'skipped']);
+const WEEKDAYS = new Set(['monday', 'tuesday', 'wednesday', 'thursday', 'friday']);
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+function cleanText(value, max) {
+  return typeof value === 'string' ? value.trim().slice(0, max) : '';
+}
+
+function validateOfficeDays(value) {
+  if (!Array.isArray(value) || value.some(day => !WEEKDAYS.has(day))) {
+    throw new Error('Invalid office days');
+  }
+  return [...new Set(value)];
+}
+
+function validateProposal(raw, sessions, isNewWeek) {
+  if (!raw || typeof raw !== 'object') throw new Error('Invalid AI proposal');
+  const ownedIds = new Set(sessions.map(session => session.id));
+  const updates = Array.isArray(raw.session_updates) ? raw.session_updates.map(update => {
+    if (!ownedIds.has(update.session_id)) throw new Error('Proposal referenced an unavailable session');
+    const clean = { session_id: update.session_id };
+    if (update.status !== undefined) {
+      if (!STATUSES.has(update.status)) throw new Error('Invalid proposed status');
+      clean.status = update.status;
+    }
+    if (update.time_slot !== undefined) clean.time_slot = cleanText(update.time_slot, 80);
+    if (update.notes !== undefined) clean.notes = cleanText(update.notes, 2000);
+    if (update.brief !== undefined) clean.brief = cleanText(update.brief, 1000);
+    return clean;
+  }) : [];
+  if (isNewWeek && updates.length > 0) throw new Error('New-week proposal cannot update existing sessions');
+
+  const additions = Array.isArray(raw.new_sessions) ? raw.new_sessions.map(session => {
+    if (!DAYS.has(session.day) || !CATEGORIES.has(session.category)) throw new Error('Invalid proposed session');
+    const name = cleanText(session.name, 120);
+    const timeSlot = cleanText(session.time_slot, 80);
+    const brief = cleanText(session.brief, 1000);
+    if (!name || !timeSlot || !brief) throw new Error('Proposed sessions require a name, time, and brief');
+    return { day: session.day, category: session.category, name, time_slot: timeSlot, brief };
+  }) : [];
+
+  return {
+    summary: cleanText(raw.summary, 500) || 'Personalized weekly plan',
+    office_days: raw.office_days === undefined ? undefined : validateOfficeDays(raw.office_days),
+    session_updates: updates,
+    new_sessions: additions,
+  };
+}
 
 module.exports = function createAIRouter(pool) {
   const router = require('express').Router();
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  // POST /api/ai/chat
   router.post('/chat', async (req, res) => {
     try {
-      const { messages, week_start, sessions, office_days } = req.body;
-
-      const sessionList = (sessions ?? [])
-        .map(s =>
-          `[id:${s.id}] ${s.day} | ${s.type} | ${s.name} | ${s.time_slot ?? 'no time'} | ${s.status}${s.felt ? ` | felt:${s.felt}` : ''}`,
-        )
-        .join('\n');
-
+      const { messages, week_start, office_days } = req.body;
+      if (!ISO_DATE.test(week_start ?? '')) return res.status(400).json({ error: 'Valid week_start required' });
+      if (!Array.isArray(messages) || messages.length === 0 || messages.some(message =>
+        !message || !['user', 'assistant'].includes(message.role) || typeof message.content !== 'string'
+      )) {
+        return res.status(400).json({ error: 'At least one valid planning message is required' });
+      }
+      const cleanOfficeDays = validateOfficeDays(office_days ?? []);
+      const [profileResult, ownedSessions, recentHistory] = await Promise.all([
+        pool.query('SELECT profile FROM user_profiles WHERE user_id = $1 AND completed_at IS NOT NULL', [req.user.id]),
+        pool.query(
+          `SELECT s.* FROM sessions s JOIN weeks w ON w.id = s.week_id
+           WHERE w.user_id = $1 AND w.week_start = $2 ORDER BY ${DAY_ORDER_SQL}, sort_order`,
+          [req.user.id, week_start],
+        ),
+        pool.query(
+          `SELECT w.week_start, s.category,
+                  COUNT(*)::int AS planned,
+                  COUNT(*) FILTER (WHERE s.status = 'done')::int AS completed,
+                  ARRAY_AGG(s.felt) FILTER (WHERE s.felt IS NOT NULL) AS felt_ratings
+           FROM weeks w JOIN sessions s ON s.week_id = w.id
+           WHERE w.user_id = $1 AND w.week_start < $2
+           AND w.id IN (SELECT id FROM weeks WHERE user_id = $1 AND week_start < $2 ORDER BY week_start DESC LIMIT 4)
+           GROUP BY w.week_start, s.category ORDER BY w.week_start DESC, s.category`,
+          [req.user.id, week_start],
+        ),
+      ]);
+      if (!profileResult.rows[0]) return res.status(409).json({ error: 'Complete your profile before planning a week' });
+      const sessions = ownedSessions.rows;
       const context = [
+        `User profile:\n${JSON.stringify(profileResult.rows[0].profile, null, 2)}`,
         `Week: ${week_start}`,
-        `Office days: ${office_days?.length ? office_days.join(', ') : 'none set'}`,
-        '',
-        'Current sessions:',
-        sessionList || '(none — week not yet set up)',
-      ].join('\n');
-
-      const systemWithContext = SYSTEM + '\n\n---\n' + context;
-      const history = (messages ?? []).map(m => ({ role: m.role, content: m.content }));
-
-      let response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        system: systemWithContext,
-        tools,
-        tool_choice: { type: 'tool', name: 'propose_changes' },
-        messages: history,
+        `Office days this week: ${cleanOfficeDays.length ? cleanOfficeDays.join(', ') : 'none'}`,
+        `Current sessions:\n${sessions.length ? JSON.stringify(sessions, null, 2) : '(new week)'}`,
+        `Recent four-week history:\n${recentHistory.rows.length ? JSON.stringify(recentHistory.rows, null, 2) : '(none)'}`,
+      ].join('\n\n');
+      const languageInstruction = req.user.locale === 'zh-CN'
+        ? '\nRespond in Simplified Chinese, while keeping enum values in English.'
+        : '';
+      const system = SYSTEM + languageInstruction + '\n\n' + context;
+      const history = (messages ?? []).slice(-12).map(message => ({ role: message.role, content: cleanText(message.content, 4000) }));
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-6', max_tokens: 1800, system, tools,
+        tool_choice: { type: 'tool', name: 'propose_changes' }, messages: history,
       });
-
-      if (response.stop_reason !== 'tool_use') {
-        const raw = JSON.stringify(response.content);
-        console.error('[AI chat] Expected tool_use but got stop_reason=%s content=%s', response.stop_reason, raw);
-        return res.status(500).json({ error: 'No schedule proposal returned from AI.' });
-      }
-
-      let text = '';
-      let proposal = null;
-
-      {
-        const toolBlock = response.content.find(b => b.type === 'tool_use' && b.name === 'propose_changes');
-        if (toolBlock) {
-          proposal = { ...toolBlock.input };
-
-          if (proposal.session_updates) {
-            proposal.session_updates = proposal.session_updates.map(u => {
-              const s = (sessions ?? []).find(s => s.id === u.session_id);
-              return {
-                ...u,
-                name:           s?.name    ?? 'Session',
-                day:            s?.day     ?? '',
-                current_status: s?.status  ?? 'pending',
-                current_time:   s?.time_slot ?? '',
-              };
-            });
-          }
-        }
-
-        const toolResults = response.content
-          .filter(b => b.type === 'tool_use')
-          .map(b => ({
-            type: 'tool_result',
-            tool_use_id: b.id,
-            content: b.name === 'propose_changes'
-              ? `Proposal shown: ${b.input.session_updates?.length ?? 0} update(s), ${b.input.new_sessions?.length ?? 0} new session(s).`
-              : 'Done.',
-          }));
-
-        const continuation = await anthropic.messages.create({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 512,
-          system: systemWithContext,
-          tools,
-          messages: [
-            ...history,
-            { role: 'assistant', content: response.content },
-            { role: 'user',      content: toolResults },
-          ],
-        });
-
-        text = continuation.content.filter(b => b.type === 'text').map(b => b.text).join('');
-      }
-
-      res.json({ message: text, proposal });
+      const toolBlock = response.content.find(block => block.type === 'tool_use' && block.name === 'propose_changes');
+      if (!toolBlock) return res.status(500).json({ error: 'No schedule proposal returned from AI' });
+      const proposal = validateProposal(toolBlock.input, sessions, sessions.length === 0);
+      proposal.session_updates = proposal.session_updates.map(update => {
+        const session = sessions.find(item => item.id === update.session_id);
+        return { ...update, name: session.name, day: session.day, current_status: session.status, current_time: session.time_slot ?? '' };
+      });
+      res.json({ message: proposal.summary, proposal });
     } catch (err) {
       console.error('[AI chat]', err.message);
       res.status(500).json({ error: err.message });
     }
   });
 
-  // POST /api/ai/apply
   router.post('/apply', async (req, res) => {
+    const client = await pool.connect();
     try {
-      const { proposal, week_start } = req.body;
-
-      const weekRow = await pool.query('SELECT id FROM weeks WHERE week_start = $1', [week_start]);
-      if (weekRow.rows.length === 0) return res.status(404).json({ error: 'Week not found' });
-      const weekId = weekRow.rows[0].id;
-
-      // Update office days if proposed
-      if (Array.isArray(proposal.office_days)) {
-        await pool.query('DELETE FROM office_days WHERE week_id = $1', [weekId]);
-        for (const day of proposal.office_days) {
-          await pool.query('INSERT INTO office_days (week_id, day) VALUES ($1, $2)', [weekId, day]);
-        }
+      if (!ISO_DATE.test(req.body.week_start ?? '')) {
+        return res.status(400).json({ error: 'Valid week_start required' });
       }
+      const requestedOfficeDays = validateOfficeDays(req.body.office_days ?? []);
+      await client.query('BEGIN');
+      const weekRow = await client.query('SELECT id FROM weeks WHERE user_id = $1 AND week_start = $2 FOR UPDATE', [req.user.id, req.body.week_start]);
+      let weekId = weekRow.rows[0]?.id;
+      const current = weekId
+        ? await client.query('SELECT * FROM sessions WHERE week_id = $1', [weekId])
+        : { rows: [] };
+      const proposal = validateProposal(req.body.proposal, current.rows, current.rows.length === 0);
 
-      // Apply session updates
-      for (const u of proposal.session_updates ?? []) {
-        const sets = [];
-        const vals = [];
-        let i = 1;
-        if (u.status    !== undefined) { sets.push(`status = $${i++}`);    vals.push(u.status); }
-        if (u.time_slot !== undefined) { sets.push(`time_slot = $${i++}`); vals.push(u.time_slot); }
-        if (u.notes     !== undefined) { sets.push(`notes = $${i++}`);     vals.push(u.notes); }
-        if (sets.length > 0) {
-          vals.push(u.session_id);
-          await pool.query(`UPDATE sessions SET ${sets.join(', ')} WHERE id = $${i}`, vals);
-        }
-      }
-
-      // Insert new sessions
-      if ((proposal.new_sessions ?? []).length > 0) {
-        const existingSortOrders = await pool.query(
-          'SELECT day, MAX(sort_order) AS max_sort FROM sessions WHERE week_id = $1 GROUP BY day',
-          [weekId],
+      if (!weekId) {
+        const inserted = await client.query(
+          `INSERT INTO weeks (user_id, week_start) VALUES ($1, $2)
+           ON CONFLICT (user_id, week_start) DO UPDATE SET week_start = EXCLUDED.week_start
+           RETURNING id`,
+          [req.user.id, req.body.week_start],
         );
-        const maxByDay = {};
-        for (const row of existingSortOrders.rows) {
-          maxByDay[row.day] = parseInt(row.max_sort, 10);
-        }
-
-        for (const ns of proposal.new_sessions) {
-          const sortOrder = (maxByDay[ns.day] ?? 0) + 1;
-          maxByDay[ns.day] = sortOrder;
-          await pool.query(
-            `INSERT INTO sessions (week_id, day, type, name, time_slot, is_commute, status, sort_order)
-             VALUES ($1, $2, $3, $4, $5, false, 'pending', $6)`,
-            [weekId, ns.day, ns.type, ns.name, ns.time_slot ?? null, sortOrder],
-          );
-        }
+        weekId = inserted.rows[0].id;
       }
-
-      // Return refreshed data
-      const sessions = await pool.query(
-        `SELECT * FROM sessions WHERE week_id = $1 ORDER BY ${DAY_ORDER_SQL}, sort_order`,
-        [weekId],
-      );
-      const officeDays = await pool.query(
-        'SELECT day FROM office_days WHERE week_id = $1',
-        [weekId],
-      );
-
-      res.json({
-        sessions: sessions.rows,
-        office_days: officeDays.rows.map(r => r.day),
-      });
+      await client.query('DELETE FROM office_days WHERE week_id = $1', [weekId]);
+      for (const day of requestedOfficeDays) {
+        await client.query('INSERT INTO office_days (week_id, day) VALUES ($1, $2)', [weekId, day]);
+      }
+      for (const update of proposal.session_updates) {
+        const fields = ['status', 'time_slot', 'notes', 'brief'].filter(field => update[field] !== undefined);
+        if (!fields.length) continue;
+        const values = fields.map(field => update[field]);
+        values.push(update.session_id, weekId);
+        await client.query(`UPDATE sessions SET ${fields.map((field, i) => `${field} = $${i + 1}`).join(', ')}
+          WHERE id = $${fields.length + 1} AND week_id = $${fields.length + 2}`, values);
+      }
+      const maxRows = await client.query('SELECT day, COALESCE(MAX(sort_order), 0)::int AS max_sort FROM sessions WHERE week_id = $1 GROUP BY day', [weekId]);
+      const maxByDay = Object.fromEntries(maxRows.rows.map(row => [row.day, row.max_sort]));
+      for (const session of proposal.new_sessions) {
+        const sortOrder = (maxByDay[session.day] ?? 0) + 1;
+        maxByDay[session.day] = sortOrder;
+        await client.query(
+          `INSERT INTO sessions (week_id, day, type, category, name, time_slot, brief, status, sort_order)
+           VALUES ($1, $2, $3, $3, $4, $5, $6, 'pending', $7)`,
+          [weekId, session.day, session.category, session.name, session.time_slot, session.brief, sortOrder],
+        );
+      }
+      const sessions = await client.query(`SELECT * FROM sessions WHERE week_id = $1 ORDER BY ${DAY_ORDER_SQL}, sort_order`, [weekId]);
+      const officeDays = await client.query('SELECT day FROM office_days WHERE week_id = $1', [weekId]);
+      await client.query('COMMIT');
+      res.json({ sessions: sessions.rows, office_days: officeDays.rows.map(row => row.day) });
     } catch (err) {
+      await client.query('ROLLBACK');
       console.error('[AI apply]', err.message);
-      res.status(500).json({ error: err.message });
+      res.status(400).json({ error: err.message });
+    } finally {
+      client.release();
     }
   });
 
   return router;
 };
+
+module.exports.validateProposal = validateProposal;
+module.exports.validateOfficeDays = validateOfficeDays;

@@ -3,16 +3,9 @@ import { Check, Zap, X, Minus, Clock } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { api } from '@/lib/api'
 import type { Session, SessionStatus, FeltRating } from '@/types'
-import { getWorkoutPlan } from '@/lib/workoutPlans'
 import SectionLabel from '@/components/ui/SectionLabel'
-
-const TYPE_COLORS: Record<string, string> = {
-  football: 'var(--football)',
-  strength: 'var(--strength)',
-  speed:    'var(--speed)',
-  cardio:   'var(--cardio)',
-  chinese:  'var(--chinese)',
-}
+import { useI18n } from '@/lib/i18n'
+import { CATEGORY_COLORS } from '@/lib/categories'
 
 const STATUS_COLORS: Record<string, string> = {
   done:      'var(--done)',
@@ -28,38 +21,48 @@ interface Props {
 }
 
 export default function SessionModal({ session, onClose, onUpdate }: Props) {
-  const notesTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const { t } = useI18n()
+  const notesTimerRef = useRef(new Map<number, ReturnType<typeof setTimeout>>())
 
   const saveNotes = useCallback((id: number, notes: string) => {
-    clearTimeout(notesTimerRef.current)
-    notesTimerRef.current = setTimeout(() => {
-      api.patchSession(id, { notes })
+    clearTimeout(notesTimerRef.current.get(id))
+    notesTimerRef.current.set(id, setTimeout(() => {
+      notesTimerRef.current.delete(id)
+      api.patchSession(id, { notes }).catch(() => undefined)
     }, 900)
+    )
   }, [])
 
   if (!session) return null
   const s = session
-  const typeColor = TYPE_COLORS[s.type] ?? 'var(--border)'
-  const isChinese = s.type === 'chinese'
-  const plan = !isChinese ? getWorkoutPlan(s.type, s.name) : null
+  const typeColor = CATEGORY_COLORS[s.category] ?? 'var(--border)'
+  const isNonPhysical = ['learning', 'lifestyle'].includes(s.category)
 
   const setStatus = async (status: SessionStatus) => {
     const updated = { ...s, status }
     onUpdate(updated)
-    await api.patchSession(s.id, { status })
+    try {
+      await api.patchSession(s.id, { status })
+    } catch {
+      onUpdate(s)
+    }
   }
 
   const setFelt = async (felt: FeltRating) => {
     const newFelt = s.felt === felt ? null : felt
     onUpdate({ ...s, felt: newFelt })
-    await api.patchSession(s.id, { felt: newFelt ?? undefined })
+    try {
+      await api.patchSession(s.id, { felt: newFelt })
+    } catch {
+      onUpdate(s)
+    }
   }
 
   const handleTimeBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const newTime = e.target.value.trim()
     if (s.time_slot === newTime) return
     onUpdate({ ...s, time_slot: newTime })
-    api.patchSession(s.id, { time_slot: newTime })
+    api.patchSession(s.id, { time_slot: newTime }).catch(() => onUpdate(s))
   }
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -78,10 +81,10 @@ export default function SessionModal({ session, onClose, onUpdate }: Props) {
         >
           <div className="flex items-center gap-2.5 mb-1">
             <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: typeColor }} />
-            <span className="text-lg font-bold text-app-text leading-tight flex-1 min-w-0 truncate">{s.name}</span>
+            <span className="text-lg font-bold text-app-text leading-tight flex-1 min-w-0 truncate">{t(s.name)}</span>
             <button
               onClick={onClose}
-              aria-label="Close"
+              aria-label={t('Close')}
               className="w-[36px] h-[36px] -mr-1 shrink-0 flex items-center justify-center rounded-full
                 text-text-dim hover:text-app-text hover:bg-surface-3 transition-colors
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-football"
@@ -92,7 +95,7 @@ export default function SessionModal({ session, onClose, onUpdate }: Props) {
           <input
             type="text"
             defaultValue={s.time_slot ?? ''}
-            placeholder="Add time"
+            placeholder={t('Add time')}
             aria-label="Edit time slot"
             onBlur={handleTimeBlur}
             className="bg-transparent border-none outline-none w-full p-0 m-0 ml-5
@@ -107,27 +110,27 @@ export default function SessionModal({ session, onClose, onUpdate }: Props) {
 
           {/* Status */}
           <div>
-            <SectionLabel>Status</SectionLabel>
-            {isChinese ? (
+            <SectionLabel>{t('Status')}</SectionLabel>
+            {isNonPhysical ? (
               <div className="flex gap-2">
-                <StatusPill label="Done"    status="done"    current={s.status} onClick={() => setStatus('done')} />
-                <StatusPill label="Skipped" status="skipped" current={s.status} onClick={() => setStatus('skipped')} />
-                <StatusPill label="Pending" status="pending" current={s.status} onClick={() => setStatus('pending')} />
+                <StatusPill label={t('Done')}    status="done"    current={s.status} onClick={() => setStatus('done')} />
+                <StatusPill label={t('Skipped')} status="skipped" current={s.status} onClick={() => setStatus('skipped')} />
+                <StatusPill label={t('Pending')} status="pending" current={s.status} onClick={() => setStatus('pending')} />
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2">
-                <StatusPill label="Done"      status="done"      current={s.status} onClick={() => setStatus('done')} />
-                <StatusPill label="Injured"   status="injured"   current={s.status} onClick={() => setStatus('injured')} />
-                <StatusPill label="Cancelled" status="cancelled" current={s.status} onClick={() => setStatus('cancelled')} />
-                <StatusPill label="Pending"   status="pending"   current={s.status} onClick={() => setStatus('pending')} />
+                <StatusPill label={t('Done')}      status="done"      current={s.status} onClick={() => setStatus('done')} />
+                <StatusPill label={t('Injured')}   status="injured"   current={s.status} onClick={() => setStatus('injured')} />
+                <StatusPill label={t('Cancelled')} status="cancelled" current={s.status} onClick={() => setStatus('cancelled')} />
+                <StatusPill label={t('Pending')}   status="pending"   current={s.status} onClick={() => setStatus('pending')} />
               </div>
             )}
           </div>
 
           {/* Felt */}
-          {!isChinese && (
+          {!isNonPhysical && (
             <div>
-              <SectionLabel>How did it feel?</SectionLabel>
+              <SectionLabel>{t('How did it feel?')}</SectionLabel>
               <div className="flex gap-1.5">
                 {(['great', 'good', 'okay', 'tough'] as FeltRating[]).map(f => (
                   <button
@@ -139,7 +142,7 @@ export default function SessionModal({ session, onClose, onUpdate }: Props) {
                         ? 'border-strength text-strength bg-strength-tint'
                         : 'border-app-border text-text-muted hover:border-strength hover:text-strength'}`}
                   >
-                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                    {t(f.charAt(0).toUpperCase() + f.slice(1))}
                   </button>
                 ))}
               </div>
@@ -148,10 +151,10 @@ export default function SessionModal({ session, onClose, onUpdate }: Props) {
 
           {/* Notes */}
           <div>
-            <SectionLabel>Notes</SectionLabel>
+            <SectionLabel>{t('Notes')}</SectionLabel>
             <textarea
               value={s.notes ?? ''}
-              placeholder="Add a note…"
+              placeholder={t('Add a note…')}
               rows={2}
               onChange={handleNotesChange}
               className="w-full min-h-16 resize-none rounded-[10px] px-3 py-2.5
@@ -163,59 +166,11 @@ export default function SessionModal({ session, onClose, onUpdate }: Props) {
             />
           </div>
 
-          {/* Workout plan */}
-          {plan && (
-            <div>
-              <SectionLabel>Today's plan</SectionLabel>
-              <div
-                className="rounded-[12px] border overflow-hidden"
-                style={{ borderColor: `color-mix(in oklch, ${typeColor} 20%, var(--border))` }}
-              >
-                {/* Plan header */}
-                <div
-                  className="px-3.5 py-2.5 flex items-center justify-between"
-                  style={{ background: `color-mix(in oklch, ${typeColor} 6%, var(--surface))` }}
-                >
-                  <span className="text-sm font-bold text-app-text">{plan.title}</span>
-                  <span
-                    className="font-mono text-[10px] tracking-[0.08em] uppercase px-2 py-0.5 rounded-full"
-                    style={{
-                      background: `color-mix(in oklch, ${typeColor} 12%, transparent)`,
-                      color: typeColor,
-                    }}
-                  >
-                    {plan.duration}
-                  </span>
-                </div>
+          {s.brief && <div>
+            <SectionLabel>{t('Session brief')}</SectionLabel>
+            <div className="rounded-[12px] border border-app-border bg-surface-3 px-3.5 py-3 text-sm text-app-text leading-relaxed">{s.brief}</div>
+          </div>}
 
-                {/* Exercises */}
-                <div className="divide-y divide-app-border">
-                  {plan.exercises.map((ex, i) => (
-                    <div key={i} className="flex items-center gap-3 px-3.5 py-2.5 bg-surface">
-                      <span className="text-[11px] font-mono text-text-dim w-4 shrink-0 text-right">{i + 1}</span>
-                      <span className="flex-1 text-sm text-app-text">{ex.name}</span>
-                      <span
-                        className="font-mono text-[11px] shrink-0"
-                        style={{ color: typeColor }}
-                      >
-                        {ex.detail}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Tip */}
-                {plan.tip && (
-                  <div
-                    className="px-3.5 py-2.5 text-xs text-text-muted italic leading-relaxed"
-                    style={{ background: `color-mix(in oklch, ${typeColor} 4%, var(--surface))` }}
-                  >
-                    {plan.tip}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>

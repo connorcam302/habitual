@@ -33,6 +33,7 @@ const DialogContent = React.forwardRef<
     <DialogOverlay>
       <DialogPrimitive.Content
         ref={ref}
+        aria-describedby={props['aria-describedby'] ?? undefined}
         className={cn(
           'relative w-full max-w-[480px] mx-auto',
           'bg-[var(--surface-2)] border-t border-[var(--border)]',

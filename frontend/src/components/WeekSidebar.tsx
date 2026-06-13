@@ -1,12 +1,6 @@
 import type { Session } from '@/types'
-
-const TYPE_META = [
-  { key: 'football', label: 'Football', color: 'var(--football)' },
-  { key: 'strength', label: 'Strength', color: 'var(--strength)' },
-  { key: 'speed',    label: 'Speed',    color: 'var(--speed)'    },
-  { key: 'cardio',   label: 'Cardio',   color: 'var(--cardio)'   },
-  { key: 'chinese',  label: 'Chinese',  color: 'var(--chinese)'  },
-]
+import { useI18n } from '@/lib/i18n'
+import { CATEGORIES, CATEGORY_COLORS } from '@/lib/categories'
 
 const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
 const SHORT: Record<string, string> = {
@@ -19,26 +13,28 @@ interface Props {
 }
 
 export default function WeekSidebar({ sessions, officeDays }: Props) {
+  const { t } = useI18n()
   return (
     <aside className="hidden md:block sticky" style={{ top: 'var(--header-h)' }}>
       {/* By type */}
       <div className="bg-surface border border-app-border rounded-[14px] p-4 mb-3">
         <div className="font-mono text-[10px] tracking-[0.1em] text-text-dim uppercase mb-3.5">
-          By type
+          {t('By type')}
         </div>
         {sessions.length === 0 ? (
-          <div className="text-sm text-text-dim">Week not tracked</div>
+          <div className="text-sm text-text-dim">{t('Week not tracked')}</div>
         ) : (
-          TYPE_META.map(({ key, label, color }) => {
-            const all = sessions.filter(s => s.type === key && s.status !== 'cancelled')
+          CATEGORIES.map(key => {
+            const all = sessions.filter(s => s.category === key && s.status !== 'cancelled')
             if (all.length === 0) return null
+            const color = CATEGORY_COLORS[key]
             const done = all.filter(s => s.status === 'done').length
             const pct = Math.round((done / all.length) * 100)
             return (
               <div key={key} className="mb-3 last:mb-0">
                 <div className="flex items-center gap-2 mb-1.5">
                   <div className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: color }} />
-                  <span className="text-sm font-medium text-app-text flex-1">{label}</span>
+                  <span className="text-sm font-medium text-app-text flex-1">{t(key[0].toUpperCase() + key.slice(1))}</span>
                   <span className="font-mono text-[11px] text-text-muted">{done}/{all.length}</span>
                 </div>
                 <div className="h-[3px] bg-app-border rounded-sm overflow-hidden">
@@ -56,7 +52,7 @@ export default function WeekSidebar({ sessions, officeDays }: Props) {
       {/* Office days */}
       <div className="bg-surface border border-app-border rounded-[14px] p-4">
         <div className="font-mono text-[10px] tracking-[0.1em] text-text-dim uppercase mb-3.5">
-          Office days
+          {t('Office days')}
         </div>
         <div className="flex gap-1.5">
           {WEEKDAYS.map(d => (
@@ -72,7 +68,7 @@ export default function WeekSidebar({ sessions, officeDays }: Props) {
                 color: 'var(--text-dim)',
               }}
             >
-              {SHORT[d]}
+              {t(SHORT[d])}
             </span>
           ))}
         </div>

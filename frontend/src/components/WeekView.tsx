@@ -4,6 +4,7 @@ import SessionModal from './SessionModal'
 import WeekSidebar from './WeekSidebar'
 import { DAY_ORDER, dayDisplayName, dateForDay, todayDayName, currentMondayISO } from '@/lib/utils'
 import type { Session } from '@/types'
+import { useI18n } from '@/lib/i18n'
 
 interface Props {
   currentWeek: string
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function WeekView({ currentWeek, sessions, officeDays, onUpdateSession }: Props) {
+  const { t, locale } = useI18n()
   const [activeSession, setActiveSession] = useState<Session | null>(null)
   const today = todayDayName()
   const isCurrentWeek = currentWeek === currentMondayISO()
@@ -41,7 +43,7 @@ export default function WeekView({ currentWeek, sessions, officeDays, onUpdateSe
           {DAY_ORDER.map(day => {
             const daySessions = grouped[day] ?? []
             const isToday = isCurrentWeek && day === today
-            const dateStr = dateForDay(currentWeek, day)
+            const dateStr = dateForDay(currentWeek, day, locale)
 
             return (
               <div key={day} className="mb-5">
@@ -51,7 +53,7 @@ export default function WeekView({ currentWeek, sessions, officeDays, onUpdateSe
                     className={`font-mono text-[11px] font-medium tracking-[0.1em] uppercase
                       ${isToday ? 'text-app-text' : 'text-text-muted'}`}
                   >
-                    {dayDisplayName(day)}
+                    {dayDisplayName(day, locale)}
                   </span>
                   {isToday && (
                     <span
@@ -61,7 +63,7 @@ export default function WeekView({ currentWeek, sessions, officeDays, onUpdateSe
                         color: 'var(--football)',
                       }}
                     >
-                      TODAY
+                      {t('TODAY')}
                     </span>
                   )}
                   <span className="font-mono text-[11px] text-text-dim ml-auto">{dateStr}</span>
@@ -71,7 +73,7 @@ export default function WeekView({ currentWeek, sessions, officeDays, onUpdateSe
                 {daySessions.length === 0 ? (
                   <div className="mx-4 mb-1 flex items-center gap-3 md:mx-1">
                     <div className="h-px flex-1 border-t border-dashed border-app-border" />
-                    <span className="font-mono text-[10px] tracking-[0.15em] uppercase text-text-dim shrink-0">rest</span>
+                    <span className="font-mono text-[10px] tracking-[0.15em] uppercase text-text-dim shrink-0">{t('rest')}</span>
                     <div className="h-px flex-1 border-t border-dashed border-app-border" />
                   </div>
                 ) : (

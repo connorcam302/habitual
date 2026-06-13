@@ -56,6 +56,9 @@
 }
 
 @layer utilities {
+  .field {
+    @apply rounded-[8px] bg-surface-3 border border-app-border px-3 py-2 text-sm text-app-text outline-none focus:border-football placeholder:text-text-dim;
+  }
   .bg-gradient-cta { background: var(--gradient-cta); }
   .bg-gradient-bar { background: var(--gradient); }
 
@@ -80,4 +83,3 @@
     .loader-dot { animation: none; opacity: 1; transform: none; }
   }
 }
-

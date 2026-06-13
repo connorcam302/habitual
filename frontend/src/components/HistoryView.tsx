@@ -1,18 +1,12 @@
 import type { Week, Stats } from '@/types'
 import type { FeltRating } from '@/types'
+import { useI18n } from '@/lib/i18n'
+import { CATEGORIES, CATEGORY_COLORS } from '@/lib/categories'
 
 interface Props {
   weeks: Week[]
   stats: Stats | null
 }
-
-const TYPE_META = [
-  { key: 'football', label: 'Football', color: 'var(--football)' },
-  { key: 'strength', label: 'Strength', color: 'var(--strength)' },
-  { key: 'speed',    label: 'Speed',    color: 'var(--speed)'    },
-  { key: 'cardio',   label: 'Cardio',   color: 'var(--cardio)'   },
-  { key: 'chinese',  label: 'Chinese',  color: 'var(--chinese)'  },
-]
 
 const FELT_META: { key: FeltRating; label: string }[] = [
   { key: 'great', label: 'Great' },
@@ -33,6 +27,7 @@ function completionColor(pct: number): string {
 }
 
 export default function HistoryView({ weeks, stats }: Props) {
+  const { t, locale } = useI18n()
   if (!stats) {
     return (
       <div className="flex justify-center pt-16">
@@ -48,7 +43,7 @@ export default function HistoryView({ weeks, stats }: Props) {
   const feltTotal = Object.values(stats.felt_dist).reduce((sum, n) => sum + (n ?? 0), 0)
   const feltMax   = Math.max(...Object.values(stats.felt_dist).map(n => n ?? 0), 1)
 
-  const activeTypes = TYPE_META.filter(({ key }) => {
+  const activeTypes = CATEGORIES.filter(key => {
     const t = stats.by_type[key as keyof typeof stats.by_type]
     return t && t.total > 0
   })
@@ -56,38 +51,39 @@ export default function HistoryView({ weeks, stats }: Props) {
   return (
     <div className="pt-1">
       {/* ── All-time stats ── */}
-      <SectionLabel>All Time</SectionLabel>
+      <SectionLabel>{t('All Time')}</SectionLabel>
 
       <div className="grid grid-cols-2 gap-2.5 px-4 pb-4 md:grid-cols-4 md:px-6">
         <StatCard
           value={`${stats.completion_rate}%`}
-          label="Completion rate"
+          label={t('Completion rate')}
           valueColor={completionColor(stats.completion_rate)}
         />
-        <StatCard value={String(stats.completed)}    label="Sessions done" />
-        <StatCard value={String(stats.weeks_tracked)} label="Weeks tracked" />
+        <StatCard value={String(stats.completed)}    label={t('Sessions done')} />
+        <StatCard value={String(stats.weeks_tracked)} label={t('Weeks tracked')} />
         <StatCard
           value={stats.avg_per_week % 1 === 0
             ? String(stats.avg_per_week)
             : stats.avg_per_week.toFixed(1)}
-          label="Avg per week"
+          label={t('Avg per week')}
         />
       </div>
 
       {/* ── By type ── */}
       {activeTypes.length > 0 && (
         <>
-          <SectionLabel>By Type</SectionLabel>
+          <SectionLabel>{t('By Type')}</SectionLabel>
           <div className="mx-3 mb-4 bg-surface border border-app-border rounded-[14px] p-4 md:mx-6">
-            {activeTypes.map(({ key, label, color }) => {
-              const t = stats.by_type[key as keyof typeof stats.by_type]!
-              const pct = t.total > 0 ? Math.round((t.done / t.total) * 100) : 0
+            {activeTypes.map(key => {
+              const typeStats = stats.by_type[key as keyof typeof stats.by_type]!
+              const pct = typeStats.total > 0 ? Math.round((typeStats.done / typeStats.total) * 100) : 0
+              const color = CATEGORY_COLORS[key]
               return (
                 <div key={key} className="mb-3.5 last:mb-0">
                   <div className="flex items-center gap-2 mb-1.5">
                     <div className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: color }} />
-                    <span className="text-sm font-medium text-app-text flex-1">{label}</span>
-                    {t.injured > 0 && (
+                    <span className="text-sm font-medium text-app-text flex-1">{t(key[0].toUpperCase() + key.slice(1))}</span>
+                    {typeStats.injured > 0 && (
                       <span
                         className="font-mono text-[10px] px-1.5 py-0.5 rounded-full"
                         style={{
@@ -95,11 +91,11 @@ export default function HistoryView({ weeks, stats }: Props) {
                           color: 'var(--injured)',
                         }}
                       >
-                        {t.injured} injured
+                        {typeStats.injured} injured
                       </span>
                     )}
                     <span className="font-mono text-[11px] text-text-muted tabular-nums">
-                      {t.done}/{t.total}
+                      {typeStats.done}/{typeStats.total}
                     </span>
                     <span
                       className="font-mono text-[11px] w-8 text-right tabular-nums"
@@ -124,14 +120,14 @@ export default function HistoryView({ weeks, stats }: Props) {
       {/* ── Felt quality ── */}
       {feltTotal >= 3 && (
         <>
-          <SectionLabel>How It Felt</SectionLabel>
+          <SectionLabel>{t('How It Felt')}</SectionLabel>
           <div className="mx-3 mb-4 bg-surface border border-app-border rounded-[14px] p-4 md:mx-6">
             {FELT_META.map(({ key, label }) => {
               const count = stats.felt_dist[key] ?? 0
               const barW  = feltMax > 0 ? Math.round((count / feltMax) * 100) : 0
               return (
                 <div key={key} className="flex items-center gap-3 mb-2.5 last:mb-0">
-                  <span className="font-mono text-[11px] text-text-muted w-9 shrink-0">{label}</span>
+                  <span className="font-mono text-[11px] text-text-muted w-9 shrink-0">{t(label)}</span>
                   <div className="flex-1 h-[3px] bg-app-border rounded-sm overflow-hidden">
                     <div
                       className="h-full rounded-sm bg-strength transition-[width] duration-[400ms]"
@@ -156,7 +152,7 @@ export default function HistoryView({ weeks, stats }: Props) {
       {/* ── Past weeks ── */}
       {weeks.length > 0 ? (
         <>
-          <SectionLabel>Past Weeks</SectionLabel>
+          <SectionLabel>{t('Past Weeks')}</SectionLabel>
           <div className="md:grid md:grid-cols-2 md:gap-2.5 md:px-6 md:pb-6">
             {weeks.map(w => {
               const total     = toInt(w.total)
@@ -170,7 +166,8 @@ export default function HistoryView({ weeks, stats }: Props) {
               const mon = new Date(dateStr + 'T00:00:00')
               const sun = new Date(mon)
               sun.setDate(mon.getDate() + 6)
-              const label = `${mon.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – ${sun.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+              const language = locale === 'zh-CN' ? 'zh-CN' : 'en-GB'
+              const label = `${mon.toLocaleDateString(language, { day: 'numeric', month: 'short' })} – ${sun.toLocaleDateString(language, { day: 'numeric', month: 'short', year: 'numeric' })}`
 
               return (
                 <div
@@ -197,7 +194,7 @@ export default function HistoryView({ weeks, stats }: Props) {
         </>
       ) : (
         <div className="text-center py-6 px-6 text-base text-text-dim">
-          No history yet
+          {t('No history yet')}
         </div>
       )}
     </div>

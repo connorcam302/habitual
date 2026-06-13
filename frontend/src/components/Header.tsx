@@ -1,8 +1,9 @@
 import { forwardRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Sparkles, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Settings, Sparkles, Trash2 } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { formatWeekLabel } from '@/lib/utils'
-import type { Session } from '@/types'
+import type { Session, User } from '@/types'
+import { useI18n } from '@/lib/i18n'
 
 interface Props {
   currentWeek: string
@@ -13,12 +14,15 @@ interface Props {
   onOpenAIModal: () => void
   onDeleteWeek: () => void
   weekExists: boolean
+  user: User
+  onOpenSettings: () => void
 }
 
 const Header = forwardRef<HTMLElement, Props>(function Header({
   currentWeek, sessions, view,
-  onNavigateWeek, onSwitchView, onOpenAIModal, onDeleteWeek, weekExists,
+  onNavigateWeek, onSwitchView, onOpenAIModal, onDeleteWeek, weekExists, user, onOpenSettings,
 }, ref) {
+  const { t, locale } = useI18n()
   const [confirming, setConfirming] = useState(false)
 
   const done  = sessions.filter(s => s.status === 'done').length
@@ -41,7 +45,7 @@ const Header = forwardRef<HTMLElement, Props>(function Header({
 
         {/* Desktop tab switcher */}
         <div className="hidden md:flex gap-0.5 bg-surface-2 border border-app-border rounded-[10px] p-[3px] shrink-0">
-          {([['week', 'This Week'], ['history', 'All Time']] as const).map(([v, label]) => (
+          {([['week', t('This Week')], ['history', t('All Time')]] as const).map(([v, label]) => (
             <button
               key={v}
               className={`px-3.5 py-1.5 rounded-[7px] text-sm font-semibold font-display transition-colors
@@ -58,7 +62,7 @@ const Header = forwardRef<HTMLElement, Props>(function Header({
 
           <button
             onClick={() => onNavigateWeek(-1)}
-            aria-label="Previous week"
+            aria-label={t('Previous week')}
             className="bg-surface-2 border border-app-border rounded-[10px] px-3 h-[38px] inline-flex items-center
               text-app-text shrink-0
               hover:bg-surface-3 transition-colors
@@ -66,12 +70,12 @@ const Header = forwardRef<HTMLElement, Props>(function Header({
           ><ChevronLeft size={16} /></button>
 
           <div className="flex-1 text-center text-sm font-bold md:text-base whitespace-nowrap overflow-hidden">
-            {currentWeek ? formatWeekLabel(currentWeek) : ''}
+            {currentWeek ? formatWeekLabel(currentWeek, locale) : ''}
           </div>
 
           <button
             onClick={() => onNavigateWeek(1)}
-            aria-label="Next week"
+            aria-label={t('Next week')}
             className="bg-surface-2 border border-app-border rounded-[10px] px-3 h-[38px] inline-flex items-center
               text-app-text shrink-0
               hover:bg-surface-3 transition-colors
@@ -89,14 +93,14 @@ const Header = forwardRef<HTMLElement, Props>(function Header({
                       hover:opacity-70 transition-opacity"
                     style={{ color: 'var(--cancelled)' }}
                   >
-                    Delete
+                    {t('Delete')}
                   </button>
                   <button
                     onClick={() => setConfirming(false)}
                     className="h-[34px] px-3 rounded-full text-xs font-semibold font-display
                       text-text-dim hover:text-text-muted transition-colors"
                   >
-                    Cancel
+                    {t('Cancel')}
                   </button>
                 </>
               ) : (
@@ -110,7 +114,7 @@ const Header = forwardRef<HTMLElement, Props>(function Header({
                       transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-football"
                   >
                     <Sparkles size={12} />
-                    <span>Adjust</span>
+                    <span>{t('Adjust')}</span>
                   </button>
                   <button
                     onClick={() => setConfirming(true)}
@@ -125,6 +129,10 @@ const Header = forwardRef<HTMLElement, Props>(function Header({
               )}
             </div>
           )}
+          <button onClick={onOpenSettings} aria-label={t('Settings')} title={user.display_name}
+            className="h-[34px] w-[34px] inline-flex items-center justify-center rounded-full text-text-muted hover:bg-surface-2">
+            <Settings size={15} />
+          </button>
 
         </div>
       </div>
@@ -144,4 +152,3 @@ const Header = forwardRef<HTMLElement, Props>(function Header({
 })
 
 export default Header
-

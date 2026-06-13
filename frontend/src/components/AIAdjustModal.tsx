@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Check } from 'lucide-react'
-import type { Session } from '@/types'
+import type { Session, UserProfile } from '@/types'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import SectionLabel from '@/components/ui/SectionLabel'
+import { useI18n } from '@/lib/i18n'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,9 +29,10 @@ interface SessionUpdate {
 
 interface NewSession {
   day: string
-  type: string
+  category: string
   name: string
   time_slot?: string
+  brief: string
 }
 
 interface Proposal {
@@ -55,19 +57,12 @@ const DAY_SHORT: Record<string, string> = {
   monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu', friday: 'Fri',
 }
 
-// Recurring football sessions that may or may not happen each week
-const RECURRING_FOOTBALL = [
-  { id: 'tue_5aside',  name: 'Tuesday 5-a-side',  time: '20:00 – 21:00' },
-  { id: 'thu_5aside',  name: 'Thursday 5-a-side', time: '20:00 – 21:00' },
-  { id: 'sun_11aside', name: 'Sunday 11-a-side',  time: '10:30' },
-]
-
 const BODY_PARTS = [
   { value: 'ankle_foot',   label: 'Ankle / Foot' },
   { value: 'knee',         label: 'Knee' },
   { value: 'shoulder_arm', label: 'Shoulder / Arm' },
   { value: 'wrist_hand',   label: 'Wrist / Hand' },
-  { value: 'back',         label: 'Back' },
+  { value: 'back',         label: 'Back / Spine' },
   { value: 'hip_groin',    label: 'Hip / Groin' },
   { value: 'illness',      label: 'Illness' },
 ]
@@ -91,27 +86,21 @@ const STATUS_COLOR: Record<string, string> = {
 
 function buildNewWeekPrompt(
   officeDays: string[],
-  cancelledFootball: Record<string, string>,
+  skippedCommitments: Record<string, string>,
   injury: InjuryState,
   notes: string,
 ): string {
-  const parts: string[] = ['Please plan my training schedule for this new week.', '']
+  const parts: string[] = ['Please plan my personalized schedule for this new week from my profile.', '']
 
   parts.push(
     officeDays.length > 0
       ? `Office days: ${officeDays.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ')}`
       : 'Working from home all week.',
   )
-
-  const cancelledIds = Object.keys(cancelledFootball)
-  if (cancelledIds.length > 0) {
-    parts.push('', 'Football sessions NOT happening this week — omit and replace with fitness:')
-    for (const id of cancelledIds) {
-      const s = RECURRING_FOOTBALL.find(s => s.id === id)
-      if (!s) continue
-      const reason = cancelledFootball[id] ? `: ${cancelledFootball[id]}` : ''
-      parts.push(`- ${s.name}${s.time ? ` (${s.time})` : ''}${reason}`)
-    }
+  const skipped = Object.entries(skippedCommitments)
+  if (skipped.length > 0) {
+    parts.push('', 'Recurring commitments not happening this week:')
+    for (const [name, reason] of skipped) parts.push(`- ${name}${reason ? `: ${reason}` : ''}`)
   }
 
   if (injury.active) {
@@ -148,7 +137,7 @@ function buildAdjustPrompt(
 
   const entries = Object.entries(affected)
   if (entries.length > 0) {
-    parts.push('Football sessions affected:')
+    parts.push('Sessions affected:')
     for (const [idStr, info] of entries) {
       const s = sessions.find(s => s.id === Number(idStr))
       if (!s) continue
@@ -172,7 +161,7 @@ function buildAdjustPrompt(
   for (const day of DAY_ORDER) {
     for (const s of sessions.filter(s => s.day === day)) {
       const d = day.charAt(0).toUpperCase() + day.slice(1)
-      parts.push(`- ${d} ${s.time_slot ?? ''}: ${s.name} (${s.type}, ${s.status})`)
+      parts.push(`- ${d} ${s.time_slot ?? ''}: ${s.name} (${s.category}, ${s.status})`)
     }
   }
 
@@ -187,6 +176,7 @@ function OfficeDayPicker({
   selected: string[]
   onChange: (days: string[]) => void
 }) {
+  const { t } = useI18n()
   const toggle = (day: string) =>
     onChange(selected.includes(day) ? selected.filter(d => d !== day) : [...selected, day])
 
@@ -207,7 +197,7 @@ function OfficeDayPicker({
             color: 'var(--text-muted)',
           }}
         >
-          {DAY_SHORT[day]}
+          {t(DAY_SHORT[day])}
         </button>
       ))}
     </div>
@@ -220,16 +210,17 @@ function InjuryFields({
   injury: InjuryState
   onChange: (patch: Partial<InjuryState>) => void
 }) {
+  const { t } = useI18n()
   return (
     <div className="space-y-2.5">
       <select
-        aria-label="Injury body part"
+        aria-label={t('Injury body part')}
         value={injury.bodyPart}
         onChange={e => onChange({ bodyPart: e.target.value })}
         className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text focus:outline-none focus:ring-1 focus:ring-football"
       >
         {BODY_PARTS.map(b => (
-          <option key={b.value} value={b.value}>{b.label}</option>
+          <option key={b.value} value={b.value}>{t(b.label)}</option>
         ))}
       </select>
 
@@ -244,14 +235,14 @@ function InjuryFields({
               ? { backgroundColor: 'var(--football)', borderColor: 'var(--football)', color: '#fdf0d5' }
               : { background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
           >
-            {sv.label}
+              {t(sv.label)}
           </button>
         ))}
       </div>
 
       <input
         type="text"
-        placeholder="Notes (optional)"
+        placeholder={t('Notes (optional)')}
         value={injury.notes}
         onChange={e => onChange({ notes: e.target.value })}
         className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
@@ -263,7 +254,7 @@ function InjuryFields({
 // ─── ProposalView ─────────────────────────────────────────────────────────────
 
 function ProposalView({
-  message, proposal, isNewWeek, onApply, onBack, applyError,
+  message, proposal, isNewWeek, onApply, onBack, applyError, applying,
 }: {
   message: string
   proposal: Proposal
@@ -271,7 +262,9 @@ function ProposalView({
   onApply: () => void
   onBack: () => void
   applyError: string
+  applying: boolean
 }) {
+  const { t } = useI18n()
   const updates = proposal.session_updates ?? []
   const additions = proposal.new_sessions ?? []
 
@@ -283,7 +276,7 @@ function ProposalView({
 
       {(updates.length > 0 || additions.length > 0) && (
         <div className="space-y-1.5">
-          <SectionLabel>{isNewWeek ? 'Proposed schedule' : 'Proposed changes'}</SectionLabel>
+          <SectionLabel>{t(isNewWeek ? 'Proposed schedule' : 'Proposed changes')}</SectionLabel>
           <div className="rounded-[10px] border border-app-border overflow-hidden divide-y divide-app-border">
             {updates.map(u => (
               <div key={u.session_id} className="flex items-center gap-3 px-3 py-2.5 bg-surface">
@@ -292,7 +285,7 @@ function ProposalView({
                   <div className="text-[11px] text-text-muted capitalize">
                     {u.day}{u.time_slot ? ` · ${u.time_slot}` : ''}
                     {u.current_time && u.time_slot && u.current_time !== u.time_slot
-                      ? <span className="text-text-dim"> (was {u.current_time})</span>
+                      ? <span className="text-text-dim"> ({t('was')} {u.current_time})</span>
                       : null}
                   </div>
                 </div>
@@ -310,11 +303,11 @@ function ProposalView({
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-app-text truncate">{n.name}</div>
                   <div className="text-[11px] text-text-muted capitalize">
-                    {n.day}{n.time_slot ? ` · ${n.time_slot}` : ''} · {n.type}
+                    {n.day}{n.time_slot ? ` · ${n.time_slot}` : ''} · {n.category}
                   </div>
                 </div>
                 <span className="text-[11px] font-semibold shrink-0" style={{ color: 'var(--done)' }}>
-                  + add
+                  + {t('add')}
                 </span>
               </div>
             ))}
@@ -331,23 +324,24 @@ function ProposalView({
           onClick={onBack}
           className="flex-1 py-2.5 rounded-[10px] text-sm font-semibold font-display border border-app-border bg-surface-2 text-app-text hover:bg-surface-3 transition-colors"
         >
-          Back
+          {t('Back')}
         </button>
         <button
           onClick={onApply}
+          disabled={applying}
           className="flex-1 py-2.5 rounded-[10px] text-sm font-semibold font-display text-app-text transition-opacity hover:opacity-90"
           style={{ backgroundColor: 'var(--football)' }}
         >
-          {isNewWeek ? 'Start week' : 'Apply changes'}
+          {t(applying ? 'Applying…' : isNewWeek ? 'Start week' : 'Apply changes')}
         </button>
       </div>
     </div>
   )
 }
 
-// ─── Session row (adjust mode, football only) ─────────────────────────────────
+// ─── Session row ──────────────────────────────────────────────────────────────
 
-function FootballSessionRow({
+function AdjustableSessionRow({
   session,
   info,
   canCancel,
@@ -360,13 +354,14 @@ function FootballSessionRow({
   onToggle: () => void
   onUpdate: (patch: Partial<AffectedSession>) => void
 }) {
+  const { t: tr } = useI18n()
   const isAffected = !!info
 
   return (
     <div>
       <button
         aria-pressed={isAffected}
-        aria-label={`${session.name} — ${isAffected ? 'affected, tap to remove' : 'tap to mark as affected'}`}
+        aria-label={`${session.name}: ${tr(isAffected ? 'affected, tap to remove' : 'tap to mark as affected')}`}
         onClick={onToggle}
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[10px] border text-left transition-colors
           ${isAffected ? 'bg-surface-2 border-app-border' : 'bg-surface border-app-border hover:bg-surface-2'}`}
@@ -381,11 +376,11 @@ function FootballSessionRow({
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium text-app-text truncate">{session.name}</div>
-          <div className="text-[11px] text-text-muted">{session.time_slot ?? 'no time set'}</div>
+          <div className="text-[11px] text-text-muted">{session.time_slot ?? tr('no time set')}</div>
         </div>
         {session.status !== 'pending' && (
           <span className="text-[11px] shrink-0 capitalize" style={{ color: STATUS_COLOR[session.status] }}>
-            {STATUS_LABEL[session.status]}
+            {tr(STATUS_LABEL[session.status])}
           </span>
         )}
       </button>
@@ -393,19 +388,19 @@ function FootballSessionRow({
       {isAffected && info && (
         <div className="mt-1.5 ml-3 pl-4 border-l-2 border-app-border space-y-2.5 pb-1">
           <div className="flex gap-1.5 pt-0.5">
-            {(['cancelled', 'injured'] as const).filter(t => t !== 'cancelled' || canCancel).map(t => (
+            {(['cancelled', 'injured'] as const).filter(status => status !== 'cancelled' || canCancel).map(status => (
               <button
-                key={t}
-                aria-pressed={info.type === t}
-                onClick={() => onUpdate({ type: t })}
+                key={status}
+                aria-pressed={info.type === status}
+                onClick={() => onUpdate({ type: status })}
                 className="px-3 py-1.5 rounded-full text-[11px] font-semibold capitalize border transition-colors"
-                style={info.type === t ? {
-                  backgroundColor: t === 'injured' ? 'var(--injured)' : 'var(--cancelled)',
-                  borderColor: t === 'injured' ? 'var(--injured)' : 'var(--cancelled)',
+                style={info.type === status ? {
+                  backgroundColor: status === 'injured' ? 'var(--injured)' : 'var(--cancelled)',
+                  borderColor: status === 'injured' ? 'var(--injured)' : 'var(--cancelled)',
                   color: '#fdf0d5',
                 } : { background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}
               >
-                {t}
+                {tr(status === 'cancelled' ? 'Cancelled' : 'Injured')}
               </button>
             ))}
           </div>
@@ -413,7 +408,7 @@ function FootballSessionRow({
           {info.type === 'cancelled' ? (
             <input
               type="text"
-              placeholder="Reason (optional)"
+              placeholder={tr('Reason (optional)')}
               value={info.reason}
               onChange={e => onUpdate({ reason: e.target.value })}
               className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
@@ -442,24 +437,26 @@ interface Props {
   currentWeek: string
   sessions: Session[]
   officeDays: string[]
+  profile: UserProfile | null
   onApplied: (sessions: Session[], officeDays?: string[]) => void
 }
 
 const DEFAULT_INJURY: InjuryState = { active: false, bodyPart: 'knee', severity: 'mild', notes: '' }
 
 export default function AIAdjustModal({
-  open, onClose, currentWeek, sessions, officeDays, onApplied,
+  open, onClose, currentWeek, sessions, officeDays, profile, onApplied,
 }: Props) {
+  const { t } = useI18n()
   const isNewWeek = sessions.length === 0
 
   // New-week state
   const [pickedOfficeDays, setPickedOfficeDays] = useState<string[]>([])
-  const [cancelledFootball, setCancelledFootball] = useState<Record<string, string>>({})
+  const [skippedCommitments, setSkippedCommitments] = useState<Record<string, string>>({})
   const [injury, setInjury] = useState<InjuryState>(DEFAULT_INJURY)
 
-  // Adjust-mode state (football only + office days)
+  // Adjust-mode state
   const [adjustOfficeDays, setAdjustOfficeDays] = useState<string[]>(officeDays)
-  const [affectedFootball, setAffectedFootball] = useState<Record<number, AffectedSession>>({})
+  const [affectedSessions, setAffectedSessions] = useState<Record<number, AffectedSession>>({})
 
   // Shared state
   const [notes, setNotes] = useState('')
@@ -468,24 +465,14 @@ export default function AIAdjustModal({
   const [aiMessage, setAiMessage] = useState('')
   const [applyError, setApplyError] = useState('')
   const [proposeError, setProposeError] = useState('')
+  const [applying, setApplying] = useState(false)
 
   // ── New-week helpers ──
 
-  const toggleCancelledFootball = (id: string) => {
-    setCancelledFootball(prev => {
-      if (id in prev) {
-        const next = { ...prev }
-        delete next[id]
-        return next
-      }
-      return { ...prev, [id]: '' }
-    })
-  }
-
   // ── Adjust-mode helpers ──
 
-  const toggleAffectedFootball = (id: number, canCancel: boolean) => {
-    setAffectedFootball(prev => {
+  const toggleAffectedSession = (id: number, canCancel: boolean) => {
+    setAffectedSessions(prev => {
       if (prev[id]) {
         const next = { ...prev }
         delete next[id]
@@ -495,8 +482,8 @@ export default function AIAdjustModal({
     })
   }
 
-  const updateAffectedFootball = (id: number, patch: Partial<AffectedSession>) => {
-    setAffectedFootball(prev => ({ ...prev, [id]: { ...prev[id], ...patch } }))
+  const updateAffectedSession = (id: number, patch: Partial<AffectedSession>) => {
+    setAffectedSessions(prev => ({ ...prev, [id]: { ...prev[id], ...patch } }))
   }
 
   // ── Propose ──
@@ -507,8 +494,8 @@ export default function AIAdjustModal({
     setProposeError('')
     try {
       const prompt = isNewWeek
-        ? buildNewWeekPrompt(pickedOfficeDays, cancelledFootball, injury, notes)
-        : buildAdjustPrompt(sessions, affectedFootball, notes, officeDays, adjustOfficeDays)
+        ? buildNewWeekPrompt(pickedOfficeDays, skippedCommitments, injury, notes)
+        : buildAdjustPrompt(sessions, affectedSessions, notes, officeDays, adjustOfficeDays)
 
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
@@ -527,14 +514,14 @@ export default function AIAdjustModal({
       }
       if (!data.proposal) {
         console.error('[AI propose] no proposal in response:', data)
-        throw new Error('No schedule was returned — please try again.')
+        throw new Error(t('No schedule was returned. Please try again.'))
       }
       setAiMessage(data.message ?? '')
       setProposal(data.proposal)
       setPhase('proposal')
     } catch (err) {
       setPhase('form')
-      setProposeError(err instanceof Error ? err.message : 'Something went wrong — please try again.')
+      setProposeError(err instanceof Error ? t(err.message) : t('Something went wrong. Please try again.'))
     }
   }
 
@@ -543,28 +530,25 @@ export default function AIAdjustModal({
   const handleApply = async () => {
     if (!proposal) return
     setApplyError('')
+    setApplying(true)
     try {
-      if (isNewWeek) {
-        // Create the week record and save office days before inserting sessions
-        const odRes = await fetch('/api/office-days', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ week_start: currentWeek, days: pickedOfficeDays }),
-        })
-        if (!odRes.ok) throw new Error()
-      }
-
       const res = await fetch('/api/ai/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ week_start: currentWeek, proposal }),
+        body: JSON.stringify({
+          week_start: currentWeek,
+          office_days: isNewWeek ? pickedOfficeDays : adjustOfficeDays,
+          proposal,
+        }),
       })
       if (!res.ok) throw new Error()
       const data = await res.json()
       onApplied(data.sessions, data.office_days ?? proposal.office_days)
       setPhase('applied')
     } catch {
-      setApplyError('Failed to apply — please try again.')
+      setApplyError(t('Failed to apply. Please try again.'))
+    } finally {
+      setApplying(false)
     }
   }
 
@@ -572,30 +556,31 @@ export default function AIAdjustModal({
 
   const handleClose = () => {
     setPickedOfficeDays([])
-    setCancelledFootball({})
+    setSkippedCommitments({})
     setInjury(DEFAULT_INJURY)
     setAdjustOfficeDays([...officeDays])
-    setAffectedFootball({})
+    setAffectedSessions({})
     setNotes('')
     setPhase('form')
     setProposal(null)
     setAiMessage('')
     setApplyError('')
     setProposeError('')
+    setApplying(false)
     onClose()
   }
 
   // ── Derived ──
 
-  const footballSessions = sessions.filter(s => s.type === 'football')
+  const adjustableSessions = sessions
 
   const officeDaysChanged =
     JSON.stringify([...adjustOfficeDays].sort()) !== JSON.stringify([...officeDays].sort())
 
   const canProposeAdjust =
-    officeDaysChanged || Object.keys(affectedFootball).length > 0 || notes.trim().length > 0
+    officeDaysChanged || Object.keys(affectedSessions).length > 0 || notes.trim().length > 0
 
-  const title = isNewWeek ? 'Plan this week' : 'Adjust this week'
+  const title = t(isNewWeek ? 'Plan this week' : 'Adjust this week')
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) handleClose() }}>
@@ -611,20 +596,20 @@ export default function AIAdjustModal({
             <div className="text-center py-10 space-y-3">
               <div className="text-3xl">✓</div>
               <div className="font-semibold text-base">
-                {isNewWeek ? 'Week planned' : 'Schedule updated'}
+                {t(isNewWeek ? 'Week planned' : 'Schedule updated')}
               </div>
               <button
                 onClick={handleClose}
                 className="px-5 py-2 rounded-[10px] bg-surface-2 border border-app-border text-sm text-app-text hover:bg-surface-3 transition-colors"
               >
-                Close
+                {t('Close')}
               </button>
             </div>
 
           /* ── Loading ── */
           ) : phase === 'loading' ? (
             <div className="text-center py-10 text-text-muted text-sm">
-              {isNewWeek ? 'Planning your week…' : 'Planning adjustments…'}
+              {t(isNewWeek ? 'Planning your week…' : 'Planning adjustments…')}
             </div>
 
           /* ── Proposal ── */
@@ -636,6 +621,7 @@ export default function AIAdjustModal({
               onApply={handleApply}
               onBack={() => setPhase('form')}
               applyError={applyError}
+              applying={applying}
             />
 
           /* ── New week form ── */
@@ -643,65 +629,40 @@ export default function AIAdjustModal({
             <>
               {/* Office days */}
               <div>
-                <SectionLabel>Office days this week</SectionLabel>
+                <SectionLabel>{t('Office days this week')}</SectionLabel>
                 <OfficeDayPicker selected={pickedOfficeDays} onChange={setPickedOfficeDays} />
                 <p className="text-[11px] text-text-dim mt-2">
-                  Exercise shifts to evenings on office days. Pimsleur on Wed–Fri office days.
+                  {t('Office days are passed to the planner as a weekly scheduling constraint.')}
                 </p>
               </div>
 
-              {/* Football sessions */}
-              <div>
-                <SectionLabel>Football this week</SectionLabel>
+              {profile && profile.commitments.length > 0 && <div>
+                <SectionLabel>{t('Recurring commitments')}</SectionLabel>
                 <div className="space-y-1.5">
-                  {RECURRING_FOOTBALL.map(s => {
-                    const isCancelled = s.id in cancelledFootball
-                    return (
-                      <div key={s.id}>
-                        <button
-                          onClick={() => toggleCancelledFootball(s.id)}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[10px] border border-app-border bg-surface text-left transition-colors hover:bg-surface-2"
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className={`text-sm font-medium transition-colors ${isCancelled ? 'text-text-dim line-through' : 'text-app-text'}`}>
-                              {s.name}
-                            </div>
-                            <div className="text-[11px] text-text-dim">{s.time}</div>
-                          </div>
-                          <span
-                            className="text-[11px] font-semibold shrink-0 px-2.5 py-1 rounded-full transition-colors"
-                            style={isCancelled ? {
-                              background: 'var(--surface-3)',
-                              color: 'var(--text-dim)',
-                            } : {
-                              background: 'color-mix(in oklch, var(--done) 12%, transparent)',
-                              color: 'var(--done)',
-                            }}
-                          >
-                            {isCancelled ? 'off' : 'on'}
-                          </span>
-                        </button>
-                        {isCancelled && (
-                          <div className="mt-1.5 ml-3 pl-4 border-l-2 border-app-border pb-1">
-                            <input
-                              type="text"
-                              placeholder="Reason (optional)"
-                              value={cancelledFootball[s.id]}
-                              onChange={e => setCancelledFootball(prev => ({ ...prev, [s.id]: e.target.value }))}
-                              className="w-full px-3 py-2 rounded-[8px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )
+                  {profile.commitments.map((commitment, index) => {
+                    const key = `${commitment.day} ${commitment.start_time} ${commitment.activity_name}`
+                    const skipped = key in skippedCommitments
+                    return <div key={`${key}-${index}`}>
+                      <button onClick={() => setSkippedCommitments(prev => {
+                        const next = { ...prev }
+                        if (skipped) delete next[key]; else next[key] = ''
+                        return next
+                      })} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[10px] border border-app-border bg-surface text-left">
+                        <div className="flex-1"><div className={skipped ? 'text-sm text-text-dim line-through' : 'text-sm text-app-text'}>{commitment.activity_name}</div>
+                          <div className="text-[11px] text-text-dim">{t(commitment.day[0].toUpperCase() + commitment.day.slice(1))} · {commitment.start_time}</div></div>
+                        <span className="text-[11px] font-semibold" style={{ color: skipped ? 'var(--text-dim)' : 'var(--done)' }}>{t(skipped ? 'off' : 'on')}</span>
+                      </button>
+                      {skipped && <input value={skippedCommitments[key]} onChange={e => setSkippedCommitments(prev => ({ ...prev, [key]: e.target.value }))}
+                        placeholder={t('Reason (optional)')} className="mt-1.5 field w-full" />}
+                    </div>
                   })}
                 </div>
-              </div>
+              </div>}
 
               {/* Injury */}
               <div>
                 <div className="flex items-center justify-between mb-2.5">
-                  <SectionLabel>Any injuries?</SectionLabel>
+                  <SectionLabel>{t('Any injuries?')}</SectionLabel>
                   <button
                     onClick={() => setInjury(prev => ({ ...prev, active: !prev.active }))}
                     className="text-[11px] font-semibold font-display px-3 py-1 rounded-full border transition-colors"
@@ -715,7 +676,7 @@ export default function AIAdjustModal({
                       color: 'var(--text-muted)',
                     }}
                   >
-                    {injury.active ? 'Yes' : 'No'}
+                    {t(injury.active ? 'Yes' : 'No')}
                   </button>
                 </div>
                 {injury.active && (
@@ -728,11 +689,11 @@ export default function AIAdjustModal({
 
               {/* Notes */}
               <div>
-                <SectionLabel>Anything else?</SectionLabel>
+                <SectionLabel>{t('Anything else?')}</SectionLabel>
                 <textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  placeholder="e.g. busy Tuesday evening, travelling Friday…"
+                  placeholder={t('For example, busy Tuesday evening or travelling Friday')}
                   rows={2}
                   className="w-full px-3 py-2.5 rounded-[10px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football resize-none"
                 />
@@ -746,7 +707,7 @@ export default function AIAdjustModal({
                 className="w-full py-3 rounded-[10px] text-sm font-semibold font-display text-app-text hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: 'var(--football)' }}
               >
-                Plan this week
+                {t('Plan this week')}
               </button>
             </>
 
@@ -755,27 +716,27 @@ export default function AIAdjustModal({
             <>
               {/* Office days */}
               <div>
-                <SectionLabel>Office days</SectionLabel>
+                <SectionLabel>{t('Office days')}</SectionLabel>
                 <OfficeDayPicker selected={adjustOfficeDays} onChange={setAdjustOfficeDays} />
               </div>
 
-              {/* Football sessions */}
+              {/* Sessions */}
               <div>
-                <SectionLabel>Football sessions</SectionLabel>
-                {footballSessions.length === 0 ? (
-                  <p className="text-sm text-text-muted">No football sessions this week.</p>
+                <SectionLabel>{t('Sessions this week')}</SectionLabel>
+                {adjustableSessions.length === 0 ? (
+                  <p className="text-sm text-text-muted">{t('No sessions this week.')}</p>
                 ) : (
                   <div className="space-y-1.5">
-                    {footballSessions.map(session => {
-                      const canCancel = /5.a.side|11.a.side/i.test(session.name)
+                    {adjustableSessions.map(session => {
+                      const canCancel = true
                       return (
-                        <FootballSessionRow
+                        <AdjustableSessionRow
                           key={session.id}
                           session={session}
-                          info={affectedFootball[session.id]}
+                          info={affectedSessions[session.id]}
                           canCancel={canCancel}
-                          onToggle={() => toggleAffectedFootball(session.id, canCancel)}
-                          onUpdate={patch => updateAffectedFootball(session.id, patch)}
+                          onToggle={() => toggleAffectedSession(session.id, canCancel)}
+                          onUpdate={patch => updateAffectedSession(session.id, patch)}
                         />
                       )
                     })}
@@ -785,11 +746,11 @@ export default function AIAdjustModal({
 
               {/* Notes */}
               <div>
-                <SectionLabel>Additional context</SectionLabel>
+                <SectionLabel>{t('Additional context')}</SectionLabel>
                 <textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  placeholder="Anything else affecting this week…"
+                  placeholder={t('Anything else affecting this week')}
                   rows={2}
                   className="w-full px-3 py-2.5 rounded-[10px] bg-surface-2 border border-app-border text-sm text-app-text placeholder:text-text-dim focus:outline-none focus:ring-1 focus:ring-football resize-none"
                 />
@@ -804,7 +765,7 @@ export default function AIAdjustModal({
                 className="w-full py-3 rounded-[10px] text-sm font-semibold font-display text-app-text disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: 'var(--football)' }}
               >
-                Propose changes
+                {t('Propose changes')}
               </button>
             </>
           )}

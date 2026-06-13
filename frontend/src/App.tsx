@@ -1,18 +1,26 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { CalendarDays, BarChart3 } from 'lucide-react'
-import type { Session, Week, Stats } from './types'
+import type { Session, Week, Stats, User, UserProfile } from './types'
 import { api } from './lib/api'
+import { I18nProvider, translate } from './lib/i18n'
 import { currentMondayISO, addWeeks } from './lib/utils'
 import LoadingScreen from './components/LoadingScreen'
 import Header from './components/Header'
 import WeekView from './components/WeekView'
 import AIAdjustModal from './components/AIAdjustModal'
+import AuthScreen from './components/AuthScreen'
+import SettingsModal from './components/SettingsModal'
+import ProfileEditor from './components/ProfileEditor'
 
 const HistoryView = lazy(() => import('./components/HistoryView'))
 
 type View = 'week' | 'history'
 
 export default function App() {
+  const [user, setUser] = useState<User | null>(null)
+  const [needsAuthSetup, setNeedsAuthSetup] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [currentWeek, setCurrentWeek] = useState('')
   const [sessions, setSessions] = useState<Session[]>([])
   const [officeDays, setOfficeDays] = useState<string[]>([])
@@ -22,6 +30,13 @@ export default function App() {
   const [aiModalOpen, setAiModalOpen] = useState(false)
   const [weeks, setWeeks] = useState<Week[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+
+  useEffect(() => {
+    api.authStatus()
+      .then(result => { setUser(result.user); setNeedsAuthSetup(result.needs_setup) })
+      .finally(() => setAuthLoading(false))
+  }, [])
 
   const loadWeek = useCallback(async (weekISO: string) => {
     setCurrentWeek(weekISO)
@@ -43,10 +58,12 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    if (!user?.profile_complete) return
+    api.getProfile().then(data => setProfile(data.profile))
     async function init() {
       try {
         const paramWeek = new URLSearchParams(window.location.search).get('week')
-        const result = await api.seedAuto()
+        const result = await api.weekStatus()
 
         if (result.needs_setup && !paramWeek) {
           setCurrentWeek(result.week_start)
@@ -62,7 +79,7 @@ export default function App() {
       }
     }
     init()
-  }, [loadWeek])
+  }, [loadWeek, user])
 
   const navigateWeek = (direction: number) => {
     loadWeek(addWeeks(currentWeek, direction))
@@ -110,9 +127,23 @@ export default function App() {
     return () => ro.disconnect()
   }, [])
 
+  if (authLoading) return <LoadingScreen />
+  if (!user) return <AuthScreen needsSetup={needsAuthSetup} onAuthenticated={u => { setUser(u); setLoading(true) }} />
+  const t = (value: string) => translate(user.locale, value)
+  if (!user.profile_complete) return <I18nProvider value={{ locale: user.locale, t }}>
+    <ProfileEditor required onSaved={() => setUser({ ...user, profile_complete: true })} />
+  </I18nProvider>
   if (loading) return <LoadingScreen />
+  const logout = async () => {
+    await api.logout()
+    setSettingsOpen(false)
+    setUser(null)
+    setSessions([])
+    setLoading(true)
+  }
 
   return (
+    <I18nProvider value={{ locale: user.locale, t }}>
     <div className="flex flex-col h-full">
       <Header
         ref={headerRef}
@@ -124,6 +155,8 @@ export default function App() {
         onOpenAIModal={() => setAiModalOpen(true)}
         onDeleteWeek={handleDeleteWeek}
         weekExists={sessions.length > 0}
+        user={user}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
 
       {/* Main content area */}
@@ -138,7 +171,7 @@ export default function App() {
         {appError ? (
           <div className="text-center py-16 px-6 text-text-muted">
             <div className="text-4xl mb-3">⚠️</div>
-            <div className="text-base">Could not connect to server.<br />Check your connection and reload.</div>
+            <div className="text-base">{t('Could not connect to server.')}<br />{t('Check your connection and reload.')}</div>
           </div>
         ) : view === 'week' ? (
           <WeekView
@@ -160,8 +193,8 @@ export default function App() {
           bg-surface border-t border-app-border flex md:hidden"
         style={{ paddingBottom: 'var(--safe-bottom)' }}
       >
-        <TabBtn active={view === 'week'}    icon={<CalendarDays size={20} />} label="This Week" onClick={() => handleSwitchView('week')} />
-        <TabBtn active={view === 'history'} icon={<BarChart3    size={20} />} label="All Time"  onClick={() => handleSwitchView('history')} />
+        <TabBtn active={view === 'week'}    icon={<CalendarDays size={20} />} label={t('This Week')} onClick={() => handleSwitchView('week')} />
+        <TabBtn active={view === 'history'} icon={<BarChart3    size={20} />} label={t('All Time')}  onClick={() => handleSwitchView('history')} />
       </div>
 
       <AIAdjustModal
@@ -170,9 +203,13 @@ export default function App() {
         currentWeek={currentWeek}
         sessions={sessions}
         officeDays={officeDays}
+        profile={profile}
         onApplied={handleAIApplied}
       />
+      <SettingsModal open={settingsOpen} user={user} onClose={() => setSettingsOpen(false)} onUser={setUser} onLogout={logout}
+        onProfileSaved={() => api.getProfile().then(data => setProfile(data.profile))} />
     </div>
+    </I18nProvider>
   )
 }
 

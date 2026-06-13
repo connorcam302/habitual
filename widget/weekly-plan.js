@@ -1,8 +1,9 @@
 // Habitual — Scriptable Widget
 // Shows today's sessions and weekly completion.
-// Setup: set BASE_URL to your server address below.
+// Setup: set BASE_URL and your personal API_TOKEN below.
 
 const BASE_URL = "http://localhost:8001"
+const API_TOKEN = "paste-your-widget-token-here"
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 // Warm-grey dark system, matches the web app.
@@ -22,11 +23,14 @@ const C = {
 }
 
 const TYPE_COLOR = {
-  football: new Color("#c1121f"),
   strength: new Color("#f5ae22"),
-  speed:    new Color("#d97630"),
   cardio:   new Color("#48a870"),
-  chinese:  new Color("#669bbc"),
+  sport:    new Color("#c1121f"),
+  mobility: new Color("#d97630"),
+  recovery: new Color("#c99b32"),
+  learning: new Color("#669bbc"),
+  lifestyle:new Color("#a8a6a0"),
+  other:    new Color("#4f4d4a"),
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -110,6 +114,7 @@ async function run() {
     const today     = getDayName(now)
 
     const req = new Request(`${BASE_URL}/api/sessions?week=${weekStart}`)
+    req.headers = { Authorization: `Bearer ${API_TOKEN}` }
     req.timeoutInterval = 10
     const data = await req.loadJSON()
 
@@ -186,7 +191,7 @@ async function run() {
         // Type dot
         const dot = row.addText("●")
         dot.font = Font.systemFont(7)
-        dot.textColor = TYPE_COLOR[s.type] ?? C.border
+        dot.textColor = TYPE_COLOR[s.category] ?? C.border
 
         // Name
         const nameText = row.addText(s.name)

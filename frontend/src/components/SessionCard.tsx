@@ -1,14 +1,8 @@
 import { Check, Zap, X, Minus, ChevronRight } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { Session, SessionStatus } from '@/types'
-
-const TYPE_COLORS: Record<string, string> = {
-  football: 'var(--football)',
-  strength: 'var(--strength)',
-  speed:    'var(--speed)',
-  cardio:   'var(--cardio)',
-  chinese:  'var(--chinese)',
-}
+import { useI18n } from '@/lib/i18n'
+import { CATEGORY_COLORS } from '@/lib/categories'
 
 const STATUS_COLORS: Record<string, string> = {
   done:      'var(--done)',
@@ -32,12 +26,17 @@ interface Props {
 }
 
 export default function SessionCard({ session: s, onOpen, onUpdate }: Props) {
-  const typeColor = TYPE_COLORS[s.type] ?? 'var(--border)'
+  const { t } = useI18n()
+  const typeColor = CATEGORY_COLORS[s.category] ?? 'var(--border)'
 
   const setStatus = async (status: SessionStatus) => {
     const updated = { ...s, status }
     onUpdate(updated)
-    await api.patchSession(s.id, { status })
+    try {
+      await api.patchSession(s.id, { status })
+    } catch {
+      onUpdate(s)
+    }
   }
 
   const quickToggleDone = (e: React.MouseEvent) => {
@@ -73,17 +72,18 @@ export default function SessionCard({ session: s, onOpen, onUpdate }: Props) {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="text-base font-semibold text-app-text truncate">{s.name}</div>
+          <div className="text-base font-semibold text-app-text truncate">{t(s.name)}</div>
           {s.time_slot && (
             <div className="font-mono text-[11px] tracking-[0.1em] text-text-dim">
               {s.time_slot}
             </div>
           )}
+          {s.brief && <div className="text-xs text-text-muted truncate mt-0.5">{s.brief}</div>}
         </div>
 
         {/* Quick done button — 44px hit area, 30px visual circle */}
         <button
-          aria-label={s.status === 'done' ? 'Mark as pending' : 'Mark as done'}
+          aria-label={t(s.status === 'done' ? 'Mark as pending' : 'Mark as done')}
           onClick={quickToggleDone}
           className="w-[44px] h-[44px] rounded-full flex items-center justify-center shrink-0
             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-football"

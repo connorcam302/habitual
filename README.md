@@ -1,125 +1,164 @@
 # Habitual
 
-A personal PWA to track a fixed weekly fitness and language learning schedule. Dark, premium UI. Runs as a single Docker Compose stack, deployed on a self-hosted server via Dokploy and exposed over HTTPS with Cloudflare Tunnels. Installable as a full-screen app on iPhone and works in any desktop browser.
+Habitual is a private, multiuser weekly planning and tracking PWA. Each user builds a personal profile containing their goals, preferred activities, recurring commitments, availability, equipment, limitations, dislikes, and planning notes. The AI planner uses that profile and recent history to propose a practical weekly schedule.
 
----
+Habitual supports custom exercise, sport, recovery, learning, and lifestyle activities in English and Simplified Chinese.
 
-## Prerequisites
+## Capabilities
 
-- A server running [Dokploy](https://dokploy.com/) (Docker must be available on it)
-- A [Cloudflare](https://cloudflare.com/) account with a domain and Zero Trust enabled
-- Git access to push this repo somewhere Dokploy can pull from (GitHub, Gitea, etc.)
-- An iPhone with Safari for the PWA install (optional)
-- [Scriptable](https://scriptable.app/) for the home screen widget (optional)
+- Private accounts with isolated profiles, plans, and history
+- Required guided profile setup and editable profile settings
+- Profile-driven AI weekly planning and adjustments
+- Custom activity names across eight broad categories
+- Short actionable session briefs
+- Weekly exceptions for injuries, office days, cancellations, and temporary notes
+- Outcome and felt-rating tracking
+- Installable PWA and per-user Scriptable widget
 
----
+## Architecture
 
-## 1. Local development
+- Frontend: React, TypeScript, and Vite
+- API: Node.js and Express
+- Database: PostgreSQL
+- AI planner: Anthropic API
+- Deployment: Docker Compose
 
-The fastest way to verify everything works before deploying.
+## Local Development
 
-**Requirements:** Docker and Docker Compose installed on your machine.
+### Prerequisites
+
+- Node.js 20 or newer
+- Bun
+- PostgreSQL
+- An Anthropic API key
+
+### Install and run
+
+Install API and frontend dependencies:
 
 ```bash
-git clone <your-repo-url> habitual
-cd habitual
-docker compose up --build
+cd api
+bun install --frozen-lockfile
+cd ../frontend
+bun install --frozen-lockfile
+cd ..
 ```
 
-Open `http://localhost:8001` in your browser. The database schema is applied automatically on first boot.
-
-To wipe all data and start fresh:
+Create a PostgreSQL database, then configure the API:
 
 ```bash
-docker compose down -v
-docker compose up --build
+export DATABASE_URL=postgresql://localhost/habitual
+export ANTHROPIC_API_KEY=your-key
 ```
 
----
+Start the API:
 
-## 2. Deploy on Dokploy
+```bash
+node api/server.js
+```
 
-### 2a. Push the repo
+In another terminal, start the frontend:
 
-Push this repo to any Git provider your Dokploy server can reach — GitHub, a private Gitea instance, etc.
+```bash
+bun run dev
+```
 
-### 2b. Create the application in Dokploy
+The Vite development server proxies `/api` requests to the API.
 
-1. Log into your Dokploy dashboard.
-2. Go to **Projects** → **New Project** → give it a name (e.g. `habitual`).
-3. Inside the project, click **New Service** → **Application**.
-4. Under **Source**, choose **Git** and connect your repo.
-5. Set **Build type** to **Docker Compose** and point the compose file path to `docker-compose.yml`.
-6. Click **Deploy**. Dokploy will build the `api` image and pull the Postgres image automatically.
+## Environment Variables
 
-Once deployed the app is running internally on port `8001`.
+| Variable | Required | Description |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `ANTHROPIC_API_KEY` | Yes for AI planning | Anthropic API key |
+| `PORT` | No | API port, defaults to the configured application port |
+| `NODE_ENV` | No | Use `production` in deployed environments |
 
-### 2c. Set up the Cloudflare Tunnel
+## Accounts and Profiles
 
-A Cloudflare Tunnel gives you HTTPS without opening any ports on your server.
+The first account becomes the owner. The owner can create additional accounts, but each user completes and edits their own private profile.
 
-1. In the [Cloudflare Zero Trust dashboard](https://one.dash.cloudflare.com/), go to **Networks → Tunnels**.
-2. Create a new tunnel and follow the connector install instructions for your server (runs as a Docker container or system service).
-3. Under **Public Hostnames**, add a hostname:
-   - **Subdomain / domain:** e.g. `habitual.yourdomain.com`
-   - **Service type:** `HTTP`
-   - **URL:** `localhost:8001`
-4. Save. Cloudflare handles TLS automatically — your app is now reachable at `https://habitual.yourdomain.com`.
+A profile is complete when it contains:
 
----
+- At least one prioritized goal
+- At least one preferred activity
+- At least one availability window or recurring commitment
 
-## 3. Add the PWA to your iPhone
+Users with incomplete profiles are routed to guided setup before they can use the tracker. Existing users are not assigned an inferred profile after upgrading; they complete a blank profile so future plans reflect their actual preferences.
 
-1. Open `https://habitual.yourdomain.com` in **Safari** (must be Safari, not Chrome).
-2. Tap the **Share** icon (box with arrow) at the bottom of the screen.
-3. Scroll down and tap **Add to Home Screen**.
-4. Give it a name and tap **Add**.
+## Weekly Planning
 
-The app will appear on your home screen and opens full-screen with no browser chrome, like a native app.
+For a new week, Habitual sends the authenticated user's profile, current week, weekly exceptions, and a concise summary of the previous four tracked weeks to the AI planner.
 
-### Optional: add a custom icon
+The planner:
 
-By default the iPhone will use a screenshot of the page as the icon. To use a proper icon instead, add two PNG files to `frontend/` before deploying:
+- Schedules recurring commitments first
+- Prioritizes higher-priority goals and target frequencies
+- Uses preferred activities and normal availability
+- Respects equipment, dislikes, limitations, injuries, cancellations, office days, and temporary notes
+- Produces an activity name, category, day, time, duration, and short session brief
 
-| File | Size |
-|------|------|
-| `frontend/icon-192.png` | 192 × 192 px |
-| `frontend/icon-512.png` | 512 × 512 px |
+Users review a proposal before applying it. Existing-week adjustments preserve unaffected sessions. All proposals are validated server-side and applied transactionally.
 
-Use a square image with no transparency for best results on iPhone (iOS masks it to a rounded square automatically).
+## Database Migrations and Existing Data
 
----
+The API runs its idempotent migration routine automatically during startup. Deploying a new API version and restarting it applies any required schema changes before the server begins normal operation.
 
-## 4. Scriptable home screen widget
+Migrations preserve existing sessions and tracking data. Legacy session types are backfilled into broad categories, while original activity data remains intact. Existing users must complete their new profile after the upgrade.
 
-The widget shows today's sessions and your weekly completion percentage directly on your iPhone home screen.
+Back up the database before deploying schema changes:
 
-1. Install [Scriptable](https://scriptable.app/) from the App Store (free).
-2. Open Scriptable and tap **+** to create a new script.
-3. Copy the entire contents of `widget/weekly-plan.js` and paste it in.
-4. At the very top of the script, set your server URL:
-   ```js
-   const BASE_URL = 'https://habitual.yourdomain.com';
-   ```
-5. Tap the play button to test — it should show today's sessions in a preview.
-6. Go to your iPhone home screen, long-press to enter jiggle mode, tap **+**, search for **Scriptable**, and add a small or medium widget.
-7. Long-press the widget → **Edit Widget** → set **Script** to your new script.
+```bash
+pg_dump "$DATABASE_URL" > habitual-backup.sql
+```
 
----
+## Docker Deployment
 
-## 5. First use
+Set the required environment variables in your deployment platform, then run:
 
-When you open the app for the first time each week, a setup sheet will appear asking which days you're in the office that week. Your selection controls whether Pimsleur commute sessions appear for Wednesday, Thursday, and Friday — office days get a commute session, WFH days don't.
+```bash
+docker compose up -d --build
+```
 
-You can update your office day selection at any time by tapping **office days** in the top-right corner of the week view.
+The API applies migrations automatically when the container starts.
 
----
+For Dokploy, deploy this repository as a Docker Compose application and configure:
 
-## Maintenance
+- `DATABASE_URL`
+- `ANTHROPIC_API_KEY`
+- `NODE_ENV=production`
 
-| Task | Command |
-|------|---------|
-| View logs | `docker compose logs -f api` |
-| Restart the API | `docker compose restart api` |
-| Pull latest code and redeploy | Trigger a redeploy in Dokploy (or `docker compose up --build -d`) |
-| Wipe database and start over | `docker compose down -v && docker compose up --build -d` |
+## PWA
+
+Open Habitual in a supported browser and install it from the browser's install or Add to Home Screen action. Each person signs into their own account and keeps their own language preference.
+
+## Scriptable Widget
+
+The Scriptable widget is configured for one user at a time. Create or copy the widget token for the intended account, then use that token in the widget configuration. To show another user's schedule, create a separate widget instance using that user's token.
+
+Widget tokens grant access to that user's widget data, so treat them like passwords and do not share them between accounts.
+
+## Verification
+
+Run the frontend production build:
+
+```bash
+bun run build
+```
+
+Run API and account-isolation tests:
+
+```bash
+npm test
+```
+
+Check the Docker Compose configuration:
+
+```bash
+docker compose config --quiet
+```
+
+## Product and Design Standards
+
+- [PRODUCT.md](PRODUCT.md) defines the product purpose, behavior, and quality standard.
+- [DESIGN.md](DESIGN.md) defines the interface, accessibility, language, and component standards.

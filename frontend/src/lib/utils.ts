@@ -38,12 +38,13 @@ export function addWeeks(isoDate: string, n: number): string {
   return formatISO(d)
 }
 
-export function formatWeekLabel(mondayISO: string): string {
+export function formatWeekLabel(mondayISO: string, locale = 'en'): string {
   const mon = new Date(mondayISO + 'T00:00:00')
   const sun = new Date(mon)
   sun.setDate(mon.getDate() + 6)
   const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
-  return `${mon.toLocaleDateString('en-GB', opts)} – ${sun.toLocaleDateString('en-GB', opts)}`
+  const language = locale === 'zh-CN' ? 'zh-CN' : 'en-GB'
+  return `${mon.toLocaleDateString(language, opts)} – ${sun.toLocaleDateString(language, opts)}`
 }
 
 export function todayDayName(): string {
@@ -51,10 +52,17 @@ export function todayDayName(): string {
   return days[new Date().getDay()]
 }
 
-export function dayDisplayName(day: string): string {
+export function dayDisplayName(day: string, locale = 'en'): string {
   const map: Record<string, string> = {
     monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday',
     thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday',
+  }
+  if (locale === 'zh-CN') {
+    const chinese: Record<string, string> = {
+      monday: '星期一', tuesday: '星期二', wednesday: '星期三',
+      thursday: '星期四', friday: '星期五', saturday: '星期六', sunday: '星期日',
+    }
+    return chinese[day] ?? day
   }
   return map[day] ?? day
 }
@@ -67,8 +75,8 @@ export function dayShortName(day: string): string {
   return map[day] ?? day
 }
 
-export function dateForDay(mondayISO: string, day: string): string {
+export function dateForDay(mondayISO: string, day: string, locale = 'en'): string {
   const d = new Date(mondayISO + 'T00:00:00')
   d.setDate(d.getDate() + (DAY_OFFSETS[day] ?? 0))
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en-GB', { day: 'numeric', month: 'short' })
 }
