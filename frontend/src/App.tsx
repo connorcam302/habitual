@@ -206,7 +206,7 @@ export default function App() {
         profile={profile}
         onApplied={handleAIApplied}
       />
-      <SettingsModal open={settingsOpen} user={user} onClose={() => setSettingsOpen(false)} onUser={setUser} onLogout={logout}
+      <SettingsModal open={settingsOpen} user={user} profile={profile} onClose={() => setSettingsOpen(false)} onUser={setUser} onLogout={logout}
         onProfileSaved={() => api.getProfile().then(data => setProfile(data.profile))} />
     </div>
     </I18nProvider>

@@ -1,5 +1,5 @@
 import { forwardRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Settings, Sparkles, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles, Trash2 } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 import { formatWeekLabel } from '@/lib/utils'
 import type { Session, User } from '@/types'
@@ -28,6 +28,13 @@ const Header = forwardRef<HTMLElement, Props>(function Header({
   const done  = sessions.filter(s => s.status === 'done').length
   const total = sessions.length
   const pct   = total > 0 ? Math.round((done / total) * 100) : 0
+  const initials = user.display_name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0])
+    .join('')
+    .toUpperCase()
 
   return (
     <header
@@ -129,9 +136,14 @@ const Header = forwardRef<HTMLElement, Props>(function Header({
               )}
             </div>
           )}
-          <button onClick={onOpenSettings} aria-label={t('Settings')} title={user.display_name}
-            className="h-[34px] w-[34px] inline-flex items-center justify-center rounded-full text-text-muted hover:bg-surface-2">
-            <Settings size={15} />
+          <button onClick={onOpenSettings} aria-label={t('View profile and settings')} title={user.display_name}
+            className="h-[38px] inline-flex items-center gap-2 rounded-full border border-app-border bg-surface-2 p-1 pr-1
+              text-text-muted hover:bg-surface-3 hover:text-app-text transition-colors
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-football md:pr-3">
+            <span className="h-7 w-7 inline-flex items-center justify-center rounded-full bg-surface-3 font-mono text-[10px] font-bold text-app-text">
+              {initials || '?'}
+            </span>
+            <span className="hidden max-w-28 truncate text-xs font-semibold md:block">{user.display_name}</span>
           </button>
 
         </div>
