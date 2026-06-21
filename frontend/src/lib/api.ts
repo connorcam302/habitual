@@ -14,6 +14,8 @@ export const api = {
   authStatus: () => req<{ needs_setup: boolean; user: User | null }>('/api/auth/status'),
   setup: (data: { username: string; display_name: string; password: string; locale: Locale }) =>
     req<{ user: User }>('/api/auth/setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+  register: (data: { username: string; display_name: string; password: string; locale: Locale }) =>
+    req<{ user: User }>('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
   login: (username: string, password: string) =>
     req<{ user: User }>('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) }),
   logout: () => req<void>('/api/auth/logout', { method: 'POST' }),

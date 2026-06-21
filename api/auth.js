@@ -142,6 +142,30 @@ module.exports = function createAuth(pool) {
     }
   }));
 
+  router.post('/register', asyncRoute(async (req, res) => {
+    const { username, display_name, password, locale = 'en' } = req.body;
+    if (!username?.trim() || !display_name?.trim() || typeof password !== 'string' || password.length < 8) {
+      return res.status(400).json({ error: 'Name, username, and a password of at least 8 characters are required' });
+    }
+    const count = await pool.query('SELECT COUNT(*)::int AS count FROM users');
+    if (count.rows[0].count === 0) {
+      return res.status(403).json({ error: 'Create the owner account first' });
+    }
+    try {
+      const result = await pool.query(
+        `INSERT INTO users (username, display_name, password_hash, locale)
+         VALUES (LOWER($1), $2, $3, $4)
+         RETURNING id, username, display_name, locale, is_owner, false AS profile_complete`,
+        [username.trim(), display_name.trim(), await hashPassword(password), locale === 'zh-CN' ? 'zh-CN' : 'en'],
+      );
+      await createSession(result.rows[0].id, res);
+      res.status(201).json({ user: publicUser(result.rows[0]) });
+    } catch (err) {
+      if (err.code === '23505') return res.status(409).json({ error: 'Username already exists' });
+      throw err;
+    }
+  }));
+
   router.post('/login', asyncRoute(async (req, res) => {
     const { username, password } = req.body;
     const result = await pool.query(

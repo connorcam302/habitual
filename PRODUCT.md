@@ -12,7 +12,7 @@ The product supports exercise, sport, recovery, learning, and lifestyle activiti
 
 - Every account has a private profile, schedule, history, and language setting.
 - Users cannot view or edit another user's profile or tracking data.
-- The owner can create accounts but does not manage another user's profile.
+- People can create their own account, and the owner can also create accounts, but the owner does not manage another user's profile.
 - There are no feeds, leaderboards, comparisons, or public profiles.
 
 ### Profile-driven planning
@@ -52,7 +52,7 @@ Each user may:
 
 ### Join and complete a profile
 
-1. The owner creates an account.
+1. The user creates an account, or the owner creates one for them.
 2. The user signs in and chooses a language.
 3. The user completes the guided profile setup.
 4. Habitual marks the profile complete when it contains at least one goal, one preferred activity, and one availability window or recurring commitment.

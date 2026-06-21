@@ -76,7 +76,7 @@ The Vite development server proxies `/api` requests to the API.
 
 ## Accounts and Profiles
 
-The first account becomes the owner. The owner can create additional accounts, but each user completes and edits their own private profile.
+The first account becomes the owner. After initial setup, people can create their own account from the landing page, or the owner can create an account for them in Settings. Each user completes and edits their own private profile.
 
 A profile is complete when it contains:
 
